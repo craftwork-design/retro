@@ -21,7 +21,8 @@ from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-SCHEMA_VERSION = 2
+VERSION = "0.3.0"
+SCHEMA_VERSION = 3
 MAX_LINE_CHARS = 50_000_000
 
 
@@ -36,16 +37,20 @@ def rx(*patterns):
 # explicit corrections: "that's wrong", "я же сказал", "откати"
 CORRECTION_RE = rx(
     r"that'?s (just )?wrong", r"that is wrong", r"not what i (asked|wanted|meant)",
-    r"you ignored", r"i (already )?(told|said|asked)( you)?\b",
+    r"you ignored", r"(?<![a-z])i already (told|said|asked)\b",
+    r"(?<![a-z])i (told|said|asked) you\b",
     r"\bundo (this|that|it)\b", r"\brevert (this|that|it)\b", r"stop doing",
-    r"don'?t do (that|this)", r"why (did|would) you", r"still (wrong|broken|not)",
-    r"you keep\b", r"you'?re not listening", r"start over", r"\bas i said\b",
-    r"try again", r"^no\b", r"^stop\b",
+    r"don'?t do (that|this)", r"still (wrong|broken)\b",
+    r"still not (working|right|fixed)\b",
+    r"you keep (doing|making|adding|ignoring|changing|breaking)",
+    r"you'?re not listening", r"start over", r"\bas i said\b",
+    r"^no[,.!]? (that|this|it|don'?t|do not|stop|wait|wrong|not)\b", r"^no[.!]?$",
+    r"^stop[.!]?$", r"^stop (it|that)\b",
     r"это не то\b", r"не то,? что я просил", r"я же (сказал|просил|говорил)",
     r"я (тебя )?просил", r"откат(и|ите)(?!\w)", r"верн(и|ите)(?!\w)",
     r"почему ты", r"ты (опять|снова)", r"(опять|снова) не (так|то)\b",
     r"не слушаешь", r"начни заново", r"^нет\b", r"^стоп(?!\w)", r"^стой(?!\w)",
-    r"^не (делай|пиши|надо|нужно)", r"я же сказал", r"хватит\b", r"^так стоп\b",
+    r"^не (делай|пиши|надо|нужно)", r"хватит\b", r"^так стоп\b",
 )
 
 # the user reports something you built/claimed done is broken
@@ -56,7 +61,8 @@ FAILURE_RE = rx(
     r"(ошибк|краш|сломал|глюч|глюк|завис|вылет|отвал)\w*",
     r"\bупал[ао]?\b", r"закрыл(ся|ась|ось)",
     r"doesn'?t work", r"not working", r"is broken", r"\bcrash\w*", r"still fails?\b",
-    r"\berror\b.{0,30}(again|still)", r"same (error|issue|problem)",
+    r"error again\b", r"same (error|issue|problem)( again| still)?\b",
+    r"still (get|getting|see|seeing|throws?) ",
 )
 
 # redo requests phrased as bare imperatives / comparatives: "компактнее",
@@ -75,6 +81,8 @@ REDO_RE = rx(
 # weak markers: only count toward score, never fire alone
 WEAK_RE = rx(
     r"(?<!\w)(nope|wrong|instead|actually|rather|incorrect)(?!\w)",
+    r"try again\b", r"why (did|would) you", r"still not\b", r"you keep\b",
+    r"(?<![a-z])i (told|said|asked)\b",
     r"(?<!\w)(неправильно|неверно|вместо|заново|не надо|не нужно|не так)(?!\w)",
 )
 
@@ -89,7 +97,7 @@ RULE_REQUEST_RE = rx(
     r"запомни(?!\w)", r"отныне", r"с этого момента", r"запиши (себе|это)",
     r"(?<!\w)всегда (делай|пиши|используй|ставь|добавляй|проверяй|отвечай|запускай)",
     r"больше (так )?(никогда )?не делай", r"никогда (больше )?не (делай|пиши|используй|ставь)",
-    r"from now on", r"remember (to|that|this)\b",
+    r"from now on", r"^remember (to|that|this)\b", r"remember this:",
     r"always (do|use|write|run|reply|answer|start|put)\b",
     r"never (do|use|write|run|touch|commit)\b",
 )
@@ -173,7 +181,10 @@ STOPWORDS = set(
     это что как для был была было быть его ее их мы вы они оно там тут если
     чтобы когда где только еще уже вот так там мне тебе нам вам меня тебя
     надо нужно можно давай сделай сделать есть нет да по на в с у к от до за
-    же бы ли или но а и о об при про из под над без""".split()
+    же бы ли или но а и о об при про из под над без все всё сам сама сами
+    вроде очень чуть теперь давай делай сделай сделать пусть просто тоже
+    everything anything nothing okay yes also very really now then here
+    там тут так как""".split()
 )
 
 
@@ -288,9 +299,9 @@ def tool_key(name, inp):
 # "commit/commits/committed" into one token for clustering. O(1) per word.
 _RU_SUFFIXES = sorted(
     ("иями ями ами иях ях ах ией ого его ому ему ыми ими ете ите йте ешь ишь "
-     "ает яет ует ают яют уют ать ять еть ить уть ой ый ий ая яя ое ее ие "
-     "ые ов ев ом ем ам ям ей ью ья ье ал ял ел ил ла ло ли ся сь ем им ит "
-     "ат ят ут ют у ю а я о е ы и ь").split(),
+     "ает яет ует ают яют уют ать ять еть ить уть ай яй ой ый ий ая яя ое ее "
+     "ие ые ов ев ом ем ам ям ей ью ья ье ал ял ел ил ла ло ли ся сь ем им "
+     "ит ат ят ут ют у ю а я о е ы и ь").split(),
     key=len, reverse=True,
 )
 _EN_SUFFIXES = ("ing", "ed", "es", "ly", "s")
@@ -303,16 +314,22 @@ def stem(w):
                 return w[: -len(suf)]
         return w
     for suf in _RU_SUFFIXES:
-        if w.endswith(suf) and len(w) - len(suf) >= 3:
+        # short suffixes fold aggressively (нашел→наш): demand longer stems
+        keep = 4 if len(suf) <= 2 else 3
+        if w.endswith(suf) and len(w) - len(suf) >= keep:
             return w[: -len(suf)]
     return w
 
 
 def tokens_of(text):
-    return {
-        stem(w) for w in re.findall(r"[a-zа-яё0-9']+", text.lower())
-        if len(w) >= 3 and w not in STOPWORDS
-    }
+    out = set()
+    for w in re.findall(r"[a-zа-яё0-9']+", text.lower()):
+        if len(w) < 3 or w in STOPWORDS:
+            continue
+        s = stem(w)
+        if s not in STOPWORDS:  # stems can collapse into stopwords (такой→так)
+            out.add(s)
+    return out
 
 
 def parse_session(path, max_excerpt):
@@ -382,6 +399,7 @@ def parse_session(path, max_excerpt):
                 content = msg.get("content")
                 if not isinstance(content, list):
                     continue
+                event_claim = None  # tri-state: None = no text blocks in event
                 for b in content:
                     if not isinstance(b, dict):
                         continue
@@ -396,8 +414,8 @@ def parse_session(path, max_excerpt):
                         if not text:
                             continue
                         last_event = "assistant_text"
-                        last_assistant_claim = bool(
-                            hits(SUCCESS_CLAIM_RE, text[-400:].lower())
+                        event_claim = bool(event_claim) or bool(
+                            hits(SUCCESS_CLAIM_RE, text.lower())
                         )
                         if not admission_since_user and prev_user_text:
                             tl = text.lower().lstrip()
@@ -408,6 +426,8 @@ def parse_session(path, max_excerpt):
                                     "admission": excerpt(text, 160),
                                 })
                                 admission_since_user = True
+                if event_claim is not None:
+                    last_assistant_claim = event_claim
 
             elif otype == "user":
                 content = msg.get("content")
@@ -437,7 +457,8 @@ def parse_session(path, max_excerpt):
                                 last_event = "error"
                         else:
                             last_event = "tool_ok"
-                    continue
+                    # fall through: the same event may carry genuine user text
+                    # alongside tool_results (block_text ignores results)
 
                 if obj.get("isMeta"):
                     continue
@@ -459,20 +480,21 @@ def parse_session(path, max_excerpt):
                 s["user_msgs"] += 1
                 tl = re.sub(r"\s+", " ", text.lower()).strip()
 
-                if hits(RULE_REQUEST_RE, tl):
+                if len(text) <= 600 and hits(RULE_REQUEST_RE, tl):
                     s["rule_requests"].append({
                         "ts": ts.isoformat() if ts else None,
                         "text": excerpt(text, max_excerpt),
                     })
 
                 nudge = bool(hits(NUDGE_RE, tl))
-                if nudge and not prev_was_interrupt:
+                if nudge and not prev_was_interrupt and not is_first:
                     s["nudges"] += 1
                     last_event = "user_msg"
-                    prev_was_interrupt = False
                     prev_user_text = text
-                    prev_user_norm = tl[:200]
+                    # prev_user_norm intentionally NOT updated: a nudge between
+                    # two identical pastes must not break repeat detection
                     admission_since_user = False
+                    last_assistant_claim = False
                     continue
 
                 if not is_first:
@@ -506,18 +528,23 @@ def parse_session(path, max_excerpt):
                     else:
                         last_event = "user_msg"
 
-                    if 3 <= len(tokens_of(text)) <= 60 and len(text) <= 1200 \
-                            and not text.startswith(("[", "/")):
-                        s["_msgs"].append({
-                            "tokens": tokens_of(text),
-                            "text": excerpt(text, 120),
-                            "session": s["id"],
-                        })
+                # first prompts included: session-opener repeats are exactly
+                # the recurring-task pattern we hunt for
+                toks = tokens_of(text)
+                if 3 <= len(toks) <= 60 and len(text) <= 1200 \
+                        and not text.startswith(("[", "/")):
+                    s["_msgs"].append({
+                        "tokens": toks,
+                        "text": excerpt(text, 120),
+                        "session": s["id"],
+                        "ts": ts.isoformat() if ts else None,
+                    })
 
                 prev_was_interrupt = False
                 prev_user_text = text
                 prev_user_norm = tl[:200]
                 admission_since_user = False
+                last_assistant_claim = False
 
     s["retry_loops"] = [
         {"tool": t, "key": k, "count": v["count"]}
@@ -580,8 +607,11 @@ def cluster_repeats(msgs):
                 inter = len(ta & tb)
                 # binary Jaccard on stemmed tokens; do NOT down-weight
                 # frequent tokens here — repeated instructions are frequent
-                # by definition, that's the whole point
-                if inter >= 2 and inter / len(ta | tb) >= 0.5:
+                # by definition, that's the whole point. Tiny token sets
+                # need more shared tokens or transitive union-find chains
+                # unrelated messages together.
+                need = 3 if min(len(ta), len(tb)) <= 4 else 2
+                if inter >= need and inter / len(ta | tb) >= 0.5:
                     parent[find(pair[0])] = find(pair[1])
 
     clusters = defaultdict(list)
@@ -598,16 +628,21 @@ def cluster_repeats(msgs):
         out.append({
             "count": len(ids),
             "sessions": len(sessions),
-            "examples": [msgs[i]["text"] for i in ids[:3]],
+            "examples": [
+                {"text": msgs[i]["text"], "session": msgs[i]["session"],
+                 "ts": msgs[i]["ts"]}
+                for i in ids[:4]
+            ],
         })
     out.sort(key=lambda c: (c["sessions"], c["count"]), reverse=True)
     return out[:15]
 
 
 def session_files(project_dirs, days, limit):
-    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
-    files = []
+    cutoff = datetime.now(timezone.utc) - timedelta(days=min(days, 36500))
+    per_dir = []
     for d in project_dirs:
+        files = []
         for f in d.glob("*.jsonl"):
             if f.name.startswith("agent-"):
                 continue
@@ -617,8 +652,18 @@ def session_files(project_dirs, days, limit):
                 continue
             if mtime >= cutoff:
                 files.append((mtime, f))
-    files.sort(reverse=True)
-    return [f for _, f in files[:limit]]
+        files.sort(reverse=True)
+        if files:
+            per_dir.append(files)
+    # round-robin newest-first across dirs, so one busy project can't
+    # starve the others out of the --limit budget
+    out, rank = [], 0
+    while len(out) < limit and any(rank < len(fs) for fs in per_dir):
+        for fs in per_dir:
+            if rank < len(fs) and len(out) < limit:
+                out.append(fs[rank][1])
+        rank += 1
+    return out
 
 
 def is_synthetic_dir(d):
@@ -626,6 +671,7 @@ def is_synthetic_dir(d):
     return (
         d.name == "-"
         or d.name.startswith("-private-var-folders")
+        or d.name.startswith("-private-tmp-")
         or d.name.startswith("-tmp-")
         or d.name.startswith("-var-folders")
     )
@@ -639,11 +685,20 @@ def aggregate(sessions, days, project_label):
     term_counter = Counter()
     all_msgs = []
 
+    # detector marker words would just echo back as "top terms"
+    marker_terms = set(
+        """работает сработало ошибка ошибку вижу видно почему поправь исправь
+        перепиши переделай передела стоп стой верни хватит заново вместо
+        неправильно неверно опять снова крашнулось сломалось сломал упал
+        wrong broken error crash instead actually stop undo revert again
+        сделал запускается запустилось открывается""".split()
+    )
     for s in sessions:
         for c in s["corrections"]:
             corrections.append({**c, "session": s["id"]})
             for w in re.findall(r"[\w']+", c["text"].lower(), re.UNICODE):
-                if len(w) >= 3 and w not in STOPWORDS and not w.isdigit():
+                if (len(w) >= 3 and w not in STOPWORDS
+                        and w not in marker_terms and not w.isdigit()):
                     term_counter[w] += 1
         for a in s["admissions"]:
             admissions.append({**a, "session": s["id"]})
@@ -678,6 +733,12 @@ def aggregate(sessions, days, project_label):
     )
     repeated = cluster_repeats(all_msgs)
     session_rows = sorted(sessions, key=lambda s: s["friction"], reverse=True)
+    # abandoned sessions are the most expensive signal: never let the
+    # top-100 cap hide them from the report
+    listed = session_rows[:100]
+    listed_ids = {s["id"] for s in listed}
+    listed += [s for s in session_rows[100:] if s["abandoned"]
+               and s["id"] not in listed_ids][:20]
 
     return {
         "schema_version": SCHEMA_VERSION,
@@ -726,7 +787,7 @@ def aggregate(sessions, days, project_label):
                 "abandoned": s["abandoned"],
                 "friction": s["friction"],
             }
-            for s in session_rows[:100]
+            for s in listed
         ],
     }
 
@@ -772,7 +833,7 @@ def print_pretty(report, color):
         print(bold("  instructions you keep repeating (ready-made CLAUDE.md rules)"))
         for r in report["repeated_instructions"][:5]:
             print(f"  {cyan(str(r['sessions']) + ' sessions')}  "
-                  f"{excerpt(r['examples'][0], 80)}")
+                  f"{excerpt(r['examples'][0]['text'], 80)}")
         print()
 
     if report["rule_requests"]:
@@ -829,6 +890,7 @@ def main():
     ap.add_argument("--no-color", action="store_true")
     ap.add_argument("--patterns", metavar="FILE",
                     help="JSON lang pack merged into built-in detectors")
+    ap.add_argument("--version", action="version", version=f"retro {VERSION}")
     args = ap.parse_args()
 
     if args.patterns:
@@ -850,9 +912,14 @@ def main():
         label = "all projects"
     else:
         # walk up from the given path: the user may be in a subdirectory of
-        # the project Claude Code was launched from; never match the root "-"
-        candidates = [Path(args.project).resolve()]
-        candidates += list(candidates[0].parents)
+        # the project Claude Code was launched from. Try both the path as
+        # given and fully resolved (symlinks: /tmp vs /private/tmp), and
+        # never match the root "-" project.
+        given = Path(args.project).absolute()
+        candidates = [given, *given.parents]
+        resolved = given.resolve()
+        if resolved != given:
+            candidates += [resolved, *resolved.parents]
         d = next(
             (projects_root / munge_path(p) for p in candidates
              if munge_path(p) != "-" and (projects_root / munge_path(p)).is_dir()),
@@ -864,7 +931,12 @@ def main():
                 f"       (looked in {projects_root})\n"
                 f"       try --all to scan every project"
             )
-        dirs = [d]
+        # sibling dirs of the same repo: worktrees and subdirectory launches
+        # (e.g. <proj>--claude-worktrees-x, <proj>-packages-y)
+        dirs = [d] + [
+            x for x in projects_root.iterdir()
+            if x.is_dir() and x.name != d.name and x.name.startswith(d.name + "-")
+        ]
         label = d.name.rsplit("-", 1)[-1] or d.name
 
     files = session_files(dirs, args.days, args.limit)
@@ -872,6 +944,7 @@ def main():
     sessions = [s for s in sessions if s["user_msgs"] > 0 or s["tool_calls"] > 0]
 
     report = aggregate(sessions, args.days, label)
+    report["truncated"] = len(files) >= args.limit
 
     if args.format == "json":
         json.dump(report, sys.stdout, ensure_ascii=False, indent=1)
