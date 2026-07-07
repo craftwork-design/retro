@@ -304,55 +304,59 @@ with quotes and dates attached. use both.</pre>
   }
   var ARTS = [
   { ms: 220, h:
-    '╔═════════════════╗\n' +
-    '║ ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ ║   <span class="dim"><- your transcripts, 1.3 GB</span>\n' +
-    '╚═╗▒▒▒▒▒▒▒▒▒▒▒▒▒╔═╝      <span class="dim">nobody ever reads them</span>\n' +
-    '  ╚═╗▒▒▒▒▒▒▒▒▒╔═╝\n' +
-    '    ╚═╗▒▒▒▒▒╔═╝\n' +
-    '      ╚═╗<span class="x0">░</span>╔═╝\n' +
-    '        ║<span class="x1">░</span>║          <span class="dim"><- /retro</span>\n' +
-    '      ╔═╝<span class="x2">░</span>╚═╗\n' +
-    '    ╔═╝  <span class="x3">░</span>  ╚═╗\n' +
-    '  ╔═╝    <span class="x4">░</span>    ╚═╗\n' +
-    '╔═╝ ▓▓▓▓▓<span class="x5">░</span>▓▓▓▓▓ ╚═╗\n' +
-    '║ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ ║   <span class="dim"><- CLAUDE.md rules</span>\n' +
-    '╚═════════════════╝',
+    '█████████████████\n' +
+    '█▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒█   <span class="dim"><- your transcripts, 1.3 GB</span>\n' +
+    ' █▒▒▒▒▒▒▒▒▒▒▒▒▒█       <span class="dim">nobody ever reads them</span>\n' +
+    '  █▒▒▒▒▒▒▒▒▒▒▒█\n' +
+    '   █▒▒▒▒▒▒▒▒▒█\n' +
+    '    █▒▒▒▒▒▒▒█\n' +
+    '     █▒▒▒▒▒█\n' +
+    '      █▒▒▒█\n' +
+    '       █<span class="x0">░</span>█         <span class="dim"><- /retro</span>\n' +
+    '      █ <span class="x1">░</span> █\n' +
+    '     █  <span class="x2">░</span>  █\n' +
+    '    █   <span class="x3">░</span>   █\n' +
+    '   █   ▓<span class="x4">░</span>▓   █\n' +
+    '  █  ▓▓▓<span class="x5">▓</span>▓▓▓  █\n' +
+    ' █ ▓▓▓▓▓▓▓▓▓▓▓ █\n' +
+    '█▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓█   <span class="dim"><- CLAUDE.md rules</span>\n' +
+    '█████████████████',
     tick: function (el, f) {
       for (var i = 0; i < 5; i++)
         q(el, "x" + i).textContent = (f + i) % 2 ? "░" : "▒";
       q(el, "x5").textContent = "░▒▓"[Math.floor(f / 6) % 3];
     } },
-  { ms: 340, h:
-    '        ┌──────────┐\n' +
-    '    ┌──<span class="x0">►</span>┤ failures ├───┐\n' +
-    '    │   └──────────┘   │\n' +
-    '    │                  <span class="x1">▼</span>\n' +
-    '┌───┴───┐        ┌──────────┐\n' +
-    '│ rules │        │ clusters │\n' +
-    '└───────┘        └────┬─────┘\n' +
-    '    <span class="x3">▲</span>                 │\n' +
-    '    │   ┌──────────┐  │\n' +
-    '    └───┤ evidence ├<span class="x2">◄</span>─┘\n' +
-    '        └──────────┘\n' +
-    '   <span class="dim">the loop, closed weekly</span>',
+  { ms: 200, h:
+    '        ╔══════════╗\n' +
+    '   ╔═<span class="c0">═</span>══╣ FAILURES ╠══<span class="c1">═</span>═╗\n' +
+    '   ║    ╚══════════╝    ║\n' +
+    '   <span class="c7">║</span>                    <span class="c2">║</span>\n' +
+    '╔══╩════╗        ╔══════╩═══╗\n' +
+    '║ RULES ║        ║ CLUSTERS ║\n' +
+    '╚══╦════╝        ╚══════╦═══╝\n' +
+    '   <span class="c6">║</span>                    <span class="c3">║</span>\n' +
+    '   ║    ╔══════════╗    ║\n' +
+    '   ╚═<span class="c5">═</span>══╣ EVIDENCE ╠══<span class="c4">═</span>═╝\n' +
+    '        ╚══════════╝\n' +
+    '     <span class="dim">the loop, closed weekly</span>',
     tick: function (el, f) {
-      var a = [["x0", "►", "─"], ["x1", "▼", "│"], ["x2", "◄", "─"], ["x3", "▲", "│"]];
-      for (var i = 0; i < 4; i++)
-        q(el, a[i][0]).textContent = f % 4 === i ? a[i][1] : a[i][2];
+      var o = { c0: "═", c1: "═", c2: "║", c3: "║", c4: "═", c5: "═", c6: "║", c7: "║" };
+      for (var i = 0; i < 8; i++)
+        q(el, "c" + i).textContent = f % 8 === i ? "●" : o["c" + i];
     } },
   { ms: 240, h:
-    '╔═════════════════════════════╗\n' +
-    '║ ┌─────────────────────────┐ ║\n' +
-    '║ │ SESSIONS · SIDE A · 45d │ ║\n' +
-    '║ └─────────────────────────┘ ║\n' +
-    '║    ╭───╮ ▬▬▬▬▬▬▬▬▬ ╭───╮    ║\n' +
-    '║    │ <span class="x0">|</span> │ ▪▪▪▪▪▪▪▪▪ │ <span class="x1">╲</span> │    ║\n' +
-    '║    ╰───╯           ╰───╯    ║\n' +
-    '║   REC <span class="x2">●</span>  <span class="x3">00:42:07</span>  1.3 GB   ║\n' +
-    '╚═════════════════════════════╝\n' +
-    '  <span class="dim">every session, still on tape</span>',
+    '▄████████████████████████████████▄\n' +
+    '██ ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄ ██\n' +
+    '██ █ SESSIONS · SIDE A · 45d  █ ██\n' +
+    '██ ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀ ██\n' +
+    '██   ▄████▄ ▒▒▒▒▒▒▒▒▒▒ ▄████▄   ██\n' +
+    '██   ██<span class="x0">││</span>██ ▒▒▒▒▒▒▒▒▒▒ ██<span class="x1">││</span>██   ██\n' +
+    '██   ▀████▀ ▒▒▒▒▒▒▒▒▒▒ ▀████▀   ██\n' +
+    '██  REC <span class="x2">●</span>   <span class="x3">00:42:07</span>   1.3 GB   ██\n' +
+    '▀████████████████████████████████▀\n' +
+    '   <span class="dim">every session, still on tape</span>',
     tick: function (el, f) {
-      var SP = ["|", "╱", "─", "╲"];
+      var SP = ["││", "╱╱", "──", "╲╲"];
       q(el, "x0").textContent = SP[f % 4];
       q(el, "x1").textContent = SP[(f + 2) % 4];
       q(el, "x2").textContent = f % 4 < 2 ? "●" : "○";
@@ -361,105 +365,130 @@ with quotes and dates attached. use both.</pre>
       q(el, "x3").textContent = "00:" + ("0" + m).slice(-2) + ":" + ("0" + s).slice(-2);
     } },
   { ms: 300, h:
-    '     .─────────────────.\n' +
-    '  .─\'                 \'─.\n' +
-    ' ╱       ┌─────┐         ╲\n' +
-    '│        │<span class="x0">  ◉  </span>│        │\n' +
-    ' ╲       └─────┘         ╱\n' +
-    '  \'─.                 .─\'\n' +
-    '     \'─────────────────\'\n' +
-    ' ──────────────────────────\n' +
-    ' <span class="dim">reading: </span><span class="x1">"no, not like that"      </span>',
+    '▄████████████████████████▄\n' +
+    '██ ┌──────────────────┐ ██\n' +
+    '██ │TRANSCRIPTS · 1.3G│ ██\n' +
+    '██ └──────────────────┘ ██\n' +
+    '██                      ██\n' +
+    '██       ▄██████▄       ██\n' +
+    '██      ███<span class="x0"> ── </span>███      ██\n' +
+    '██       ▀██████▀       ██\n' +
+    '██          <span class="x1">●</span>           ██\n' +
+    '██        ░░░░░░        ██\n' +
+    '▀████████████████████████▀\n' +
+    '  <span class="dim">insert disk 42 of 1,847</span>',
     tick: function (el, f) {
-      var P = ["◉    ", " ◉   ", "  ◉  ", "   ◉ ", "    ◉"];
-      var k = f % 8;
-      q(el, "x0").textContent = P[k <= 4 ? k : 8 - k];
-      var Q = ['"no, not like that"', '"переделай, компактнее"',
-               '"я же просил без тире"', '"stop. revert it."'];
-      q(el, "x1").textContent = pad(Q[Math.floor(f / 9) % 4], 25);
+      q(el, "x0").textContent = [" ── ", " ╲╲ ", " ││ ", " ╱╱ "][f % 4];
+      q(el, "x1").textContent = f % 6 < 3 ? "●" : "○";
     } },
   { ms: 150, h:
     '<span class="dim">in:  </span><span class="x0"></span>\n' +
-    '┌───────────────────────────────────────────┐\n' +
-    '│ ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒  ► /retro ►  ▒▒▒▒▒▒▒▒▒▒▒▒ │\n' +
-    '└───────────────────────────────────────────┘\n' +
+    '                   ▼▼▼\n' +
+    '▄██████████████████████████████████████████▄\n' +
+    '██ ▒▒▒▒▒▒▒▒▒▒▒ ►► /retro <span class="x2">◐</span> ►► ▒▒▒▒▒▒▒▒▒▒▒ ██\n' +
+    '▀██████████████████████████████████████████▀\n' +
+    '  <span class="x3">●○●○●○●○●○●○●○●○●○●○●○●○●○●○●○●○●○●○●○●○</span>\n' +
     '<span class="dim">out: </span><span class="x1"></span>\n' +
     '     <span class="dim">the belt never stops</span>',
     tick: function (el, f) {
       var SRC = '✗ "no" · ✗ "не так" · ✗ esc · ✗ "still broken" · ✗ "короче" · ';
-      q(el, "x0").textContent = (SRC + SRC).substr(f % SRC.length, 38);
+      q(el, "x0").textContent = (SRC + SRC).substr(f % SRC.length, 40);
       var R = ["+ rule: tests via pnpm vitest run",
                "+ rule: reply in russian, briefly",
                "+ rule: never touch /secrets",
                "+ rule: one dev server is enough"];
       var r = R[Math.floor(f / 44) % 4], ph = (f % 44) * 2;
-      q(el, "x1").textContent = pad(r.slice(0, ph), 38);
+      q(el, "x1").textContent = pad(r.slice(0, ph), 40);
+      q(el, "x2").textContent = ["◐", "◓", "◑", "◒"][f % 4];
+      var roll = f % 2 ? "●○" : "○●";
+      q(el, "x3").textContent = roll.repeat(20);
     } },
   { ms: 260, h:
-    '┌───────────────────────┐\n' +
-    '│ ·        <span class="x4">·</span>          · │\n' +
-    '│     <span class="x2">·</span>            ·    │\n' +
-    '│           ┼<span class="x0">│</span>          │\n' +
-    '│    ·          <span class="x3">·</span>       │\n' +
-    '└───────────────────────┘\n' +
-    ' <span class="dim">sweep: ~/.claude/projects</span><span class="x1">   </span>',
+    '     ▄▄▄▄▄▄▄▄▄▄▄▄▄▄\n' +
+    '  ▄██████████████████▄\n' +
+    ' ██████████████████████\n' +
+    ' ███<span class="x0">▒▒▒▒▒</span>██████<span class="x1">▒▒▒▒▒</span>███\n' +
+    ' ████<span class="x2">▒▒▒</span>████████<span class="x3">▒▒▒</span>████\n' +
+    ' ██████████▄▄██████████\n' +
+    ' ▀████████████████████▀\n' +
+    '   <span class="x4">█▄█▄█▄█▄█▄█▄█▄█▄█▄</span>\n' +
+    '     ▀▀▀▀▀▀▀▀▀▀▀▀▀▀\n' +
+    '  <span class="dim">nothing is ever deleted</span>',
     tick: function (el, f) {
-      q(el, "x0").textContent = ["│", "╱", "─", "╲"][f % 4];
-      q(el, "x2").textContent = f % 9 < 3 ? "●" : "·";
-      q(el, "x3").textContent = f % 7 < 3 ? "●" : "·";
-      q(el, "x4").textContent = f % 11 < 3 ? "●" : "·";
-      q(el, "x1").textContent = pad(".".repeat(1 + f % 3), 3);
+      var g = "░▒▓█▓▒"[f % 6];
+      q(el, "x0").textContent = g.repeat(5);
+      q(el, "x1").textContent = g.repeat(5);
+      q(el, "x2").textContent = g.repeat(3);
+      q(el, "x3").textContent = g.repeat(3);
+      q(el, "x4").textContent = Math.floor(f / 5) % 2
+        ? "█▄█▄█▄█▄█▄█▄█▄█▄█▄" : "▄█▄█▄█▄█▄█▄█▄█▄█▄█";
     } },
-  { ms: 260, h:
-    '╔═════════════════════════════╗\n' +
-    '║ <span class="x0">                           </span> ║\n' +
-    '║ <span class="x1">                           </span> ║\n' +
-    '║ <span class="x2">                           </span> ║\n' +
-    '║ <span class="x3">                           </span> ║\n' +
-    '║ <span class="x4">                           </span> ║\n' +
-    '╚════════╦═══════════╦════════╝\n' +
-    '         ╨           ╨\n' +
+  { ms: 200, h:
+    '▄██████████████████████████████▄\n' +
+    '██┌──────────────────────────┐██\n' +
+    '██│<span class="x0"> C:\\RETRO> replay #042    </span>│██\n' +
+    '██│<span class="x1"> you:   "не так, короче"  </span>│██\n' +
+    '██│<span class="x2"> agent: "ты прав, виноват"</span>│██\n' +
+    '██│<span class="x3"> rule → CLAUDE.md  ✓      </span>│██\n' +
+    '██│<span class="x4"> █                        </span>│██\n' +
+    '██└──────────────────────────┘██\n' +
+    '▀██████████████████████████████▀\n' +
+    '             ▄████▄\n' +
+    '        ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀\n' +
     '  <span class="dim">the machine remembers everything</span>',
     tick: function (el, f) {
-      var L = ["C:\\RETRO> replay 042", 'you:   "не так, короче"',
-               'agent: "ты прав, виноват"', "rule:  saved to CLAUDE.md"];
-      var stage = Math.floor(f / 4) % 8;
+      var L = [" C:\\RETRO> replay #042", ' you:   "не так, короче"',
+               ' agent: "ты прав, виноват"', " rule → CLAUDE.md  ✓"];
+      var s = f % 22;
       for (var i = 0; i < 4; i++)
-        q(el, "x" + i).textContent = pad(i < stage ? L[i] : "", 27);
-      q(el, "x4").textContent = pad(stage > 4 && f % 2 ? "█" : "", 27);
+        q(el, "x" + i).textContent = s === i * 2 ? "▒".repeat(26) : pad(L[i], 26);
+      q(el, "x4").textContent = s === 8 ? "▒".repeat(26) : pad(f % 2 ? " █" : "", 26);
     } },
   { ms: 120, h:
-    '<span class="dim">friction monitor · last 45 days</span>\n' +
-    '<span class="x0"></span>\n' +
-    '<span class="dim">   spikes: esc pressed · "не так" · rage quit</span>',
+    '╔══════════════════════════════════════════════╗\n' +
+    '║ FRICTION MONITOR · 45d            <span class="x2">♥</span> <span class="x3">221</span> ║\n' +
+    '║ ────────────────────────────────────────────  ║\n' +
+    '║ <span class="x0"></span> ║\n' +
+    '║ <span class="x1"></span> ║\n' +
+    '╚══════════════════════════════════════════════╝\n' +
+    '   <span class="dim">every spike is you correcting the agent</span>',
     tick: function (el, f) {
       var W = "───▁▂▁────▄──▁───█▁──▂──────▃──▁▁───▂───█▂▁────▅──▁──";
       q(el, "x0").textContent = (W + W).substr(f % W.length, 44);
+      q(el, "x1").textContent = (W + W).substr((f + 27) % W.length, 44);
+      q(el, "x2").textContent = f % 4 < 2 ? "♥" : " ";
+      q(el, "x3").textContent = String(219 + (f % 5));
     } },
   { ms: 90, h:
-    '<span class="dim">corrections per week</span>\n' +
-    '<span class="x0"></span>\n' +
-    '<span class="x1"></span>\n' +
-    '<span class="dim">──── /retro installed ────</span>\n' +
-    '<span class="x2"></span>\n' +
-    '<span class="x3"></span>',
+    '┌─ CORRECTIONS / WEEK ────────────────┐\n' +
+    '│                                     │\n' +
+    '│ w25 <span class="x0"></span> │\n' +
+    '│ w26 <span class="x1"></span> │\n' +
+    '│ ▶── /retro installed ─────────────◀ │\n' +
+    '│ w27 <span class="x2"></span> │\n' +
+    '│ w28 <span class="x3"></span> │\n' +
+    '│                                     │\n' +
+    '└─────────────────────────────────────┘\n' +
+    '   <span class="dim">the only chart that should go down</span>',
     tick: function (el, f) {
-      var B = [[13, "47"], [9, "31"], [4, "12"], [1, "4"]];
+      var B = [[24, "47"], [16, "31"], [7, "12"], [2, "4"]];
       var g = Math.min(f % 70, 16) / 16;
       for (var i = 0; i < 4; i++) {
         var n = Math.round(B[i][0] * g);
         q(el, "x" + i).textContent =
-          pad("█".repeat(n) + (n >= B[i][0] ? " " + B[i][1] : ""), 20);
+          pad("█".repeat(n) + "░".repeat(B[i][0] - n) +
+              (n >= B[i][0] ? " " + B[i][1] : ""), 31);
       }
     } },
   { ms: 110, h:
-    '┌───────────────────────────────────┐\n' +
-    '│ CLAUDE.md                         │\n' +
-    '│ ───────────────────────────────── │\n' +
-    '│ + dev server is already running   │\n' +
-    '│ + tests: pnpm vitest run          │\n' +
-    '│ <span class="x0">                                 </span> │\n' +
-    '└───────────────────────────────────┘\n' +
+    '╔═══════════════════════════════════╗\n' +
+    '║ ▓▓▓▓▓▓▓▓▓▓▓▓ CLAUDE.md ▓▓▓▓▓▓▓▓▓▓ ║\n' +
+    '╠═══════════════════════════════════╣\n' +
+    '║ + dev server is already running   ║\n' +
+    '║ + tests: pnpm vitest run          ║\n' +
+    '║ <span class="x0">                                 </span> ║\n' +
+    '║                                   ║\n' +
+    '╚═══════════════════════════════════╝\n' +
     '  <span class="dim">it writes itself. from your failures.</span>',
     tick: function (el, f) {
       var R = ["+ reply in russian, briefly", "+ commit only your own changes",
@@ -584,6 +613,31 @@ with quotes and dates attached. use both.</pre>
   }
 
   term.addEventListener("click", function () { tkb.focus({ preventScroll: true }); });
+  // the prompt is live from the first keystroke, no click needed:
+  // printable keys anywhere on the page route into the terminal
+  document.addEventListener("keydown", function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (document.activeElement === tkb) return;
+    var t = e.target;
+    if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+    if (e.key === " " && !tkb.value) return; // keep space = scroll until typing starts
+    if (e.key.length === 1) {
+      e.preventDefault();
+      tkb.focus({ preventScroll: true });
+      tkb.value += e.key;
+      tin.textContent = tkb.value;
+    } else if (e.key === "Backspace" && tkb.value) {
+      e.preventDefault();
+      tkb.focus({ preventScroll: true });
+      tkb.value = tkb.value.slice(0, -1);
+      tin.textContent = tkb.value;
+    } else if (e.key === "Enter" && tkb.value) {
+      e.preventDefault();
+      tkb.focus({ preventScroll: true });
+      var v = tkb.value; tkb.value = ""; tin.textContent = "";
+      run(v);
+    }
+  });
   tkb.addEventListener("input", function () { tin.textContent = tkb.value; });
   tkb.addEventListener("keydown", function (e) {
     if (e.key === "Enter") {
