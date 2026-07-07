@@ -539,7 +539,9 @@ with quotes and dates attached. use both.</pre>
   function drain() {
     var line = outQ.shift();
     if (line === undefined) { outT = null; return; }
-    if (REDUCED) {
+    // multi-line output is ASCII art: render it clean and instant, the
+    // per-char glitch typewriter only suits single-line replies
+    if (REDUCED || line.indexOf("\n") !== -1) {
       tout.textContent += line + "\n"; trimOut(); keepVisible(); drain(); return;
     }
     var base = tout.textContent, i = 0;
