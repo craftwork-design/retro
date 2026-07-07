@@ -521,12 +521,16 @@ with quotes and dates attached. use both.</pre>
     var t = tout.textContent;
     if (t.length > 7000) tout.textContent = t.slice(t.indexOf("\n", t.length - 5000) + 1);
   }
+  var tend = term.querySelector(".caret");
+  function keepVisible() {
+    tend.scrollIntoView({ block: "nearest" });
+  }
   function out(text) { outQ.push(text); if (!outT) drain(); }
   function drain() {
     var line = outQ.shift();
     if (line === undefined) { outT = null; return; }
     if (REDUCED) {
-      tout.textContent += line + "\n"; trimOut(); drain(); return;
+      tout.textContent += line + "\n"; trimOut(); keepVisible(); drain(); return;
     }
     var base = tout.textContent, i = 0;
     outT = setInterval(function () {
@@ -534,12 +538,13 @@ with quotes and dates attached. use both.</pre>
       if (i >= line.length) {
         clearInterval(outT); outT = null;
         tout.textContent = base + line + "\n";
-        trimOut(); drain();
+        trimOut(); keepVisible(); drain();
       } else {
         var s = line.slice(0, i);
         if (Math.random() < 0.5)
           s = s.slice(0, -1) + GLYPHS[(Math.random() * GLYPHS.length) | 0];
         tout.textContent = base + s;
+        keepVisible();
       }
     }, 16);
   }
@@ -565,6 +570,7 @@ with quotes and dates attached. use both.</pre>
     var cmd = raw.trim();
     tout.textContent += "guest@retro:~$ " + cmd + "\n";
     trimOut();
+    keepVisible();
     if (!cmd) return;
     histCmd.push(cmd); histIdx = histCmd.length;
     var c = cmd.toLowerCase();
