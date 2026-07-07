@@ -47,7 +47,22 @@ or being ignored, versus failures no rule could have prevented.
 From the JSON, identify at most 5 recurring patterns. A pattern needs at
 least 2 independent occurrences; ignore one-offs. For each candidate, check
 the excerpts yourself: a "correction" flagged by the scanner may be a normal
-instruction — drop those. Typical real patterns:
+instruction — drop those. Each correction carries `reasons` tags
+(correction / failure_report / redo / post_interrupt / repeat_paste /
+frustration) — weigh multi-reason and frustration-tagged entries higher.
+
+Start with the highest-yield fields:
+
+- `rule_requests` — the user dictated a rule out loud ("запомни, отныне
+  всегда..."). These convert to CLAUDE.md rules almost verbatim.
+- `repeated_instructions` — the same ask across 2+ sessions. Each cluster is
+  a missing CLAUDE.md rule by definition.
+- `admissions` — the agent conceded a mistake; `user_text` holds what the
+  user actually complained about, `admission` often names the root cause.
+- `nudges` — bare "continue" messages; 2+ in one session means the agent
+  stalls mid-task (premature stopping pattern).
+
+Typical real patterns:
 
 - The user repeats the same stylistic correction across sessions (missing CLAUDE.md rule)
 - A CLAUDE.md rule exists but is violated anyway (rule is buried, vague, or contradicted)

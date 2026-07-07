@@ -1,0 +1,49 @@
+{
+  "_comment": "Example language pack (Spanish). Pass with: scan.py --patterns example-es.json. Each key extends the built-in detector class with extra case-insensitive regexes. PRs with language packs are welcome.",
+  "correction": [
+    "eso no es lo que (pedí|quería)",
+    "ya te (dije|pedí)",
+    "no,? así no",
+    "^no\\b",
+    "por qué (hiciste|has hecho)",
+    "deshaz(lo)?\\b",
+    "revierte(lo)?\\b",
+    "otra vez no"
+  ],
+  "failure_report": [
+    "no funciona",
+    "sigue (roto|fallando)",
+    "se rompió",
+    "se cerró solo",
+    "da error"
+  ],
+  "redo": [
+    "hazlo de nuevo",
+    "más (corto|simple|pequeño|limpio)",
+    "reescríbe(lo)?\\b",
+    "rediséña(lo)?\\b"
+  ],
+  "frustration": [
+    "cuántas veces",
+    "por favor te lo suplico"
+  ],
+  "rule_request": [
+    "recuerda (que|esto)",
+    "a partir de ahora",
+    "siempre (haz|usa|escribe|pon)",
+    "nunca (hagas|uses|escribas)"
+  ],
+  "nudge": [
+    "^(continúa|sigue|adelante|dale)[.!\\s]*$",
+    "^(terminaste|listo|ya está)\\??$"
+  ],
+  "continuation": [
+    "^(continúa|sigue|dale|sí|ok)[.!\\s]*$"
+  ],
+  "admission": [
+    "tienes (toda la )?razón",
+    "mi error",
+    "me equivoqué",
+    "lo siento"
+  ]
+}

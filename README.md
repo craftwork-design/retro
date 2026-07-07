@@ -52,11 +52,27 @@ python3 ~/.claude/skills/retro/scripts/scan.py --format json
 
 | Signal | What it means |
 |---|---|
-| Corrections | You told the agent it was wrong ("no", "not like that", "I said...") |
-| Interrupts | You hit Esc while it was doing something |
+| Corrections | You told the agent it was wrong: explicit ("not like that"), bug reports ("it crashed again"), redo requests ("shorter", "поправь хедер") |
+| Admissions | The agent itself said "you're right" or "my mistake". Catches corrections no keyword list ever would |
+| Repeated asks | The same instruction given across 2+ different sessions. Each cluster is a ready-made CLAUDE.md rule |
+| Rule requests | You dictated a rule out loud: "remember, from now on always..." |
+| Interrupts | You hit Esc while it was doing something, plus whatever you said right after |
+| Nudges | You typed a bare "continue" because the agent stalled mid-task |
 | Denials | Permission prompts you rejected |
 | Retry loops | The same call failed 3+ times in a session |
 | Abandoned sessions | The session ended right after a failure. The most expensive signal there is |
+
+### Languages
+
+Roughly half of the signals are language-agnostic by construction: interrupts, nudge-free repeated instructions (token clustering), repeated pastes, denials, errors, retry loops, abandoned sessions. The lexical detectors (corrections, admissions, rule requests, nudges) ship with English and Russian patterns, morphology-aware.
+
+Other languages plug in as a JSON pattern pack, no code changes:
+
+```bash
+python3 scan.py --patterns skill/patterns/example-es.json
+```
+
+See [skill/patterns/example-es.json](skill/patterns/example-es.json) for the format. Language pack PRs are very welcome.
 
 The scanner is deterministic and high-recall; the skill (the model) does the judgment: which candidates are real patterns, what the root cause is, and what minimal rule, hook, or permission change would have prevented them.
 
