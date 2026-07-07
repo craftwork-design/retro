@@ -78,16 +78,51 @@
   .cmd:hover { background: var(--fg); color: var(--bg); }
   .cmd:hover .dim { color: var(--bg); }
   .plaque {
-    display: inline-block;
-    min-height: 1.5em;
+    display: block;
+    height: 1.75em;
+    line-height: 1.75;
     color: var(--dim);
     user-select: none;
+    overflow: hidden;
   }
-  .plaque.blue {
+  .plaque .blue {
     background: #0000aa;
     color: #ffffff;
     padding: 0 0.75ch;
   }
+  #term { cursor: text; }
+  #tkb {
+    position: absolute; opacity: 0; width: 1px; height: 1px;
+    border: 0; padding: 0; pointer-events: none;
+  }
+  #doomwin {
+    position: fixed; inset: 0; z-index: 90; display: flex;
+    align-items: center; justify-content: center;
+    background: rgba(0, 0, 0, 0.72);
+  }
+  #doomwin .win {
+    width: min(92vw, 660px); background: #000000;
+    border: 4px double #ffffff; color: #ffffff;
+    font-family: inherit;
+  }
+  #doomwin .bar {
+    background: #0000aa; color: #ffffff; padding: 0.15rem 0.75ch;
+    display: flex; justify-content: space-between;
+  }
+  #doomwin .bar button {
+    background: none; border: 0; color: #ffffff;
+    font: inherit; cursor: pointer;
+  }
+  #doomwin pre.fire {
+    color: #ff9500; line-height: 1; font-size: 10px;
+    margin: 0; padding: 2px 4px; user-select: none; overflow: hidden;
+  }
+  #doomwin iframe {
+    display: block; width: 100%; height: min(60vh, 420px);
+    border: 0; background: #000;
+  }
+  #doomwin .hint { padding: 0.2rem 0.75ch; color: rgba(255,255,255,.5); }
+  #matrixfx { position: fixed; inset: 0; z-index: 80; pointer-events: none; }
   .num { display: inline-block; min-width: 4ch; text-align: right; font-weight: 700; }
   .caret {
     display: inline-block; width: 0.62em; height: 1.15em;
@@ -106,19 +141,7 @@
     <button id="theme" aria-label="toggle theme">[☾]</button>
   </div>
 
-  <pre class="block art" aria-hidden="true">╔═════════════════╗
-║ ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ ║   <span class="dim">&lt;- your transcripts, 1.3 GB</span>
-╚═╗▒▒▒▒▒▒▒▒▒▒▒▒▒╔═╝      <span class="dim">nobody ever reads them</span>
-  ╚═╗▒▒▒▒▒▒▒▒▒╔═╝
-    ╚═╗▒▒▒▒▒╔═╝
-      ╚═╗░╔═╝
-        ║░║          <span class="dim">&lt;- /retro</span>
-      ╔═╝░╚═╗
-    ╔═╝  ░  ╚═╗
-  ╔═╝    ░    ╚═╗
-╔═╝ ▓▓▓▓▓░▓▓▓▓▓ ╚═╗
-║ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ ║   <span class="dim">&lt;- CLAUDE.md rules</span>
-╚═════════════════╝</pre>
+  <pre class="block art" id="hero" aria-hidden="true"></pre>
 
   <pre class="block"><strong>never type the same correction twice.</strong></pre>
 
@@ -197,7 +220,10 @@ with quotes and dates attached. use both.</pre>
   <footer>
     <pre class="rule">── ─────────────────────────────────────────────</pre>
     <pre class="block"><a href="https://github.com/craftwork-design/retro">github.com/craftwork-design/retro</a>
-<span class="dim">MIT · free · built by</span> <a href="https://craftwork.design">craftwork.design</a> <span class="caret" aria-hidden="true"></span></pre>
+<span class="dim">MIT · free · built by</span> <a href="https://craftwork.design">craftwork.design</a></pre>
+    <pre class="block" id="term"><span class="dim"># the prompt below is live. try: help, ls, doom
+</span><span id="tout"></span><span>guest@retro:~$ </span><span id="tin"></span><span class="caret" aria-hidden="true"></span></pre>
+    <input id="tkb" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="terminal input">
   </footer>
 </main>
 
@@ -229,19 +255,19 @@ with quotes and dates attached. use both.</pre>
   var GLYPHS = "▓▒░#%&@*+=<>/\\_";
   var REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // copy-to-clipboard commands: hover tries to copy right away (browsers
-  // that demand a real gesture get a hint instead), click always copies.
-  // feedback types itself onto a DOS-blue plaque below the command.
+  // copy-to-clipboard: click copies; a permanently reserved line below the
+  // command shows feedback, so the layout never shifts a single pixel.
   document.querySelectorAll(".cmd").forEach(function (el) {
     var plaque = document.createElement("span");
     plaque.className = "plaque";
-    el.parentNode.insertBefore(document.createTextNode("\n"), el.nextSibling);
-    el.parentNode.insertBefore(plaque, el.nextSibling.nextSibling);
+    var inner = document.createElement("span");
+    plaque.appendChild(inner);
+    el.parentNode.insertBefore(plaque, el.nextSibling);
 
     function typePlaque(text, blue) {
-      plaque.classList.toggle("blue", blue);
+      inner.className = blue ? "blue" : "";
       if (plaque._t) clearInterval(plaque._t);
-      if (REDUCED) { plaque.textContent = text; return; }
+      if (REDUCED) { inner.textContent = text; return; }
       var i = 0;
       plaque._t = setInterval(function () {
         i++;
@@ -249,32 +275,413 @@ with quotes and dates attached. use both.</pre>
         if (i < text.length && Math.random() < 0.6) {
           s = s.slice(0, -1) + GLYPHS[(Math.random() * GLYPHS.length) | 0];
         }
-        plaque.textContent = s;
+        inner.textContent = s;
         if (i >= text.length) clearInterval(plaque._t);
       }, 26);
     }
-    function copy() {
-      return navigator.clipboard
-        ? navigator.clipboard.writeText(el.dataset.copy)
-        : Promise.reject();
-    }
     el.addEventListener("mouseenter", function () {
-      copy().then(
-        function () { typePlaque("# copied to clipboard", true); },
-        function () { typePlaque("# click to copy", false); }
-      );
+      typePlaque("# click to copy", false);
     });
     el.addEventListener("click", function () {
-      copy().then(function () { typePlaque("# copied to clipboard", true); });
+      if (!navigator.clipboard) return;
+      navigator.clipboard.writeText(el.dataset.copy).then(function () {
+        typePlaque("# copied to clipboard", true);
+      });
     });
     el.addEventListener("mouseleave", function () {
       if (plaque._t) clearInterval(plaque._t);
-      plaque.textContent = "";
-      plaque.classList.remove("blue");
+      inner.textContent = "";
+      inner.className = "";
     });
   });
 
-  if (REDUCED) return;
+  // ---------- hero art: one of 10, random each load ----------
+  var hero = document.getElementById("hero");
+  function pad(s, n) { while (s.length < n) s += " "; return s.slice(0, n); }
+  function q(el, c) {
+    el._q = el._q || {};
+    return el._q[c] || (el._q[c] = el.querySelector("." + c));
+  }
+  var ARTS = [
+  { ms: 220, h:
+    '╔═════════════════╗\n' +
+    '║ ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ ║   <span class="dim"><- your transcripts, 1.3 GB</span>\n' +
+    '╚═╗▒▒▒▒▒▒▒▒▒▒▒▒▒╔═╝      <span class="dim">nobody ever reads them</span>\n' +
+    '  ╚═╗▒▒▒▒▒▒▒▒▒╔═╝\n' +
+    '    ╚═╗▒▒▒▒▒╔═╝\n' +
+    '      ╚═╗<span class="x0">░</span>╔═╝\n' +
+    '        ║<span class="x1">░</span>║          <span class="dim"><- /retro</span>\n' +
+    '      ╔═╝<span class="x2">░</span>╚═╗\n' +
+    '    ╔═╝  <span class="x3">░</span>  ╚═╗\n' +
+    '  ╔═╝    <span class="x4">░</span>    ╚═╗\n' +
+    '╔═╝ ▓▓▓▓▓<span class="x5">░</span>▓▓▓▓▓ ╚═╗\n' +
+    '║ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ ║   <span class="dim"><- CLAUDE.md rules</span>\n' +
+    '╚═════════════════╝',
+    tick: function (el, f) {
+      for (var i = 0; i < 5; i++)
+        q(el, "x" + i).textContent = (f + i) % 2 ? "░" : "▒";
+      q(el, "x5").textContent = "░▒▓"[Math.floor(f / 6) % 3];
+    } },
+  { ms: 340, h:
+    '        ┌──────────┐\n' +
+    '    ┌──<span class="x0">►</span>┤ failures ├───┐\n' +
+    '    │   └──────────┘   │\n' +
+    '    │                  <span class="x1">▼</span>\n' +
+    '┌───┴───┐        ┌──────────┐\n' +
+    '│ rules │        │ clusters │\n' +
+    '└───────┘        └────┬─────┘\n' +
+    '    <span class="x3">▲</span>                 │\n' +
+    '    │   ┌──────────┐  │\n' +
+    '    └───┤ evidence ├<span class="x2">◄</span>─┘\n' +
+    '        └──────────┘\n' +
+    '   <span class="dim">the loop, closed weekly</span>',
+    tick: function (el, f) {
+      var a = [["x0", "►", "─"], ["x1", "▼", "│"], ["x2", "◄", "─"], ["x3", "▲", "│"]];
+      for (var i = 0; i < 4; i++)
+        q(el, a[i][0]).textContent = f % 4 === i ? a[i][1] : a[i][2];
+    } },
+  { ms: 240, h:
+    '╔═════════════════════════════╗\n' +
+    '║ ┌─────────────────────────┐ ║\n' +
+    '║ │ SESSIONS · SIDE A · 45d │ ║\n' +
+    '║ └─────────────────────────┘ ║\n' +
+    '║    ╭───╮ ▬▬▬▬▬▬▬▬▬ ╭───╮    ║\n' +
+    '║    │ <span class="x0">|</span> │ ▪▪▪▪▪▪▪▪▪ │ <span class="x1">╲</span> │    ║\n' +
+    '║    ╰───╯           ╰───╯    ║\n' +
+    '║   REC <span class="x2">●</span>  <span class="x3">00:42:07</span>  1.3 GB   ║\n' +
+    '╚═════════════════════════════╝\n' +
+    '  <span class="dim">every session, still on tape</span>',
+    tick: function (el, f) {
+      var SP = ["|", "╱", "─", "╲"];
+      q(el, "x0").textContent = SP[f % 4];
+      q(el, "x1").textContent = SP[(f + 2) % 4];
+      q(el, "x2").textContent = f % 4 < 2 ? "●" : "○";
+      var t = 2527 + Math.floor(f / 4);
+      var m = Math.floor(t / 60), s = t % 60;
+      q(el, "x3").textContent = "00:" + ("0" + m).slice(-2) + ":" + ("0" + s).slice(-2);
+    } },
+  { ms: 300, h:
+    '     .─────────────────.\n' +
+    '  .─\'                 \'─.\n' +
+    ' ╱       ┌─────┐         ╲\n' +
+    '│        │<span class="x0">  ◉  </span>│        │\n' +
+    ' ╲       └─────┘         ╱\n' +
+    '  \'─.                 .─\'\n' +
+    '     \'─────────────────\'\n' +
+    ' ──────────────────────────\n' +
+    ' <span class="dim">reading: </span><span class="x1">"no, not like that"      </span>',
+    tick: function (el, f) {
+      var P = ["◉    ", " ◉   ", "  ◉  ", "   ◉ ", "    ◉"];
+      var k = f % 8;
+      q(el, "x0").textContent = P[k <= 4 ? k : 8 - k];
+      var Q = ['"no, not like that"', '"переделай, компактнее"',
+               '"я же просил без тире"', '"stop. revert it."'];
+      q(el, "x1").textContent = pad(Q[Math.floor(f / 9) % 4], 25);
+    } },
+  { ms: 150, h:
+    '<span class="dim">in:  </span><span class="x0"></span>\n' +
+    '┌───────────────────────────────────────────┐\n' +
+    '│ ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒  ► /retro ►  ▒▒▒▒▒▒▒▒▒▒▒▒ │\n' +
+    '└───────────────────────────────────────────┘\n' +
+    '<span class="dim">out: </span><span class="x1"></span>\n' +
+    '     <span class="dim">the belt never stops</span>',
+    tick: function (el, f) {
+      var SRC = '✗ "no" · ✗ "не так" · ✗ esc · ✗ "still broken" · ✗ "короче" · ';
+      q(el, "x0").textContent = (SRC + SRC).substr(f % SRC.length, 38);
+      var R = ["+ rule: tests via pnpm vitest run",
+               "+ rule: reply in russian, briefly",
+               "+ rule: never touch /secrets",
+               "+ rule: one dev server is enough"];
+      var r = R[Math.floor(f / 44) % 4], ph = (f % 44) * 2;
+      q(el, "x1").textContent = pad(r.slice(0, ph), 38);
+    } },
+  { ms: 260, h:
+    '┌───────────────────────┐\n' +
+    '│ ·        <span class="x4">·</span>          · │\n' +
+    '│     <span class="x2">·</span>            ·    │\n' +
+    '│           ┼<span class="x0">│</span>          │\n' +
+    '│    ·          <span class="x3">·</span>       │\n' +
+    '└───────────────────────┘\n' +
+    ' <span class="dim">sweep: ~/.claude/projects</span><span class="x1">   </span>',
+    tick: function (el, f) {
+      q(el, "x0").textContent = ["│", "╱", "─", "╲"][f % 4];
+      q(el, "x2").textContent = f % 9 < 3 ? "●" : "·";
+      q(el, "x3").textContent = f % 7 < 3 ? "●" : "·";
+      q(el, "x4").textContent = f % 11 < 3 ? "●" : "·";
+      q(el, "x1").textContent = pad(".".repeat(1 + f % 3), 3);
+    } },
+  { ms: 260, h:
+    '╔═════════════════════════════╗\n' +
+    '║ <span class="x0">                           </span> ║\n' +
+    '║ <span class="x1">                           </span> ║\n' +
+    '║ <span class="x2">                           </span> ║\n' +
+    '║ <span class="x3">                           </span> ║\n' +
+    '║ <span class="x4">                           </span> ║\n' +
+    '╚════════╦═══════════╦════════╝\n' +
+    '         ╨           ╨\n' +
+    '  <span class="dim">the machine remembers everything</span>',
+    tick: function (el, f) {
+      var L = ["C:\\RETRO> replay 042", 'you:   "не так, короче"',
+               'agent: "ты прав, виноват"', "rule:  saved to CLAUDE.md"];
+      var stage = Math.floor(f / 4) % 8;
+      for (var i = 0; i < 4; i++)
+        q(el, "x" + i).textContent = pad(i < stage ? L[i] : "", 27);
+      q(el, "x4").textContent = pad(stage > 4 && f % 2 ? "█" : "", 27);
+    } },
+  { ms: 120, h:
+    '<span class="dim">friction monitor · last 45 days</span>\n' +
+    '<span class="x0"></span>\n' +
+    '<span class="dim">   spikes: esc pressed · "не так" · rage quit</span>',
+    tick: function (el, f) {
+      var W = "───▁▂▁────▄──▁───█▁──▂──────▃──▁▁───▂───█▂▁────▅──▁──";
+      q(el, "x0").textContent = (W + W).substr(f % W.length, 44);
+    } },
+  { ms: 90, h:
+    '<span class="dim">corrections per week</span>\n' +
+    '<span class="x0"></span>\n' +
+    '<span class="x1"></span>\n' +
+    '<span class="dim">──── /retro installed ────</span>\n' +
+    '<span class="x2"></span>\n' +
+    '<span class="x3"></span>',
+    tick: function (el, f) {
+      var B = [[13, "47"], [9, "31"], [4, "12"], [1, "4"]];
+      var g = Math.min(f % 70, 16) / 16;
+      for (var i = 0; i < 4; i++) {
+        var n = Math.round(B[i][0] * g);
+        q(el, "x" + i).textContent =
+          pad("█".repeat(n) + (n >= B[i][0] ? " " + B[i][1] : ""), 20);
+      }
+    } },
+  { ms: 110, h:
+    '┌───────────────────────────────────┐\n' +
+    '│ CLAUDE.md                         │\n' +
+    '│ ───────────────────────────────── │\n' +
+    '│ + dev server is already running   │\n' +
+    '│ + tests: pnpm vitest run          │\n' +
+    '│ <span class="x0">                                 </span> │\n' +
+    '└───────────────────────────────────┘\n' +
+    '  <span class="dim">it writes itself. from your failures.</span>',
+    tick: function (el, f) {
+      var R = ["+ reply in russian, briefly", "+ commit only your own changes",
+               "+ never start a second server", "+ no em-dashes. ever."];
+      var r = R[Math.floor(f / 60) % 4], ph = f % 60;
+      var sh = r.slice(0, Math.min(r.length, ph));
+      var cur = sh.length < r.length ? "█" : (f % 8 < 4 ? "█" : " ");
+      q(el, "x0").textContent = pad(sh + cur, 33);
+    } },
+  ];
+  var art = ARTS[(Math.random() * ARTS.length) | 0];
+  hero.innerHTML = art.h;
+  var artStarted = false;
+  function startArt() {
+    if (REDUCED || artStarted) return;
+    artStarted = true;
+    var f = 0;
+    setInterval(function () { art.tick(hero, f++); }, art.ms);
+  }
+
+  // ---------- the live terminal ----------
+  var tout = document.getElementById("tout");
+  var tin = document.getElementById("tin");
+  var tkb = document.getElementById("tkb");
+  var term = document.getElementById("term");
+  var histCmd = [], histIdx = 0, vimMode = false;
+  var outQ = [], outT = null;
+
+  function trimOut() {
+    var t = tout.textContent;
+    if (t.length > 7000) tout.textContent = t.slice(t.indexOf("\n", t.length - 5000) + 1);
+  }
+  function out(text) { outQ.push(text); if (!outT) drain(); }
+  function drain() {
+    var line = outQ.shift();
+    if (line === undefined) { outT = null; return; }
+    if (REDUCED) {
+      tout.textContent += line + "\n"; trimOut(); drain(); return;
+    }
+    var base = tout.textContent, i = 0;
+    outT = setInterval(function () {
+      i += 3;
+      if (i >= line.length) {
+        clearInterval(outT); outT = null;
+        tout.textContent = base + line + "\n";
+        trimOut(); drain();
+      } else {
+        var s = line.slice(0, i);
+        if (Math.random() < 0.5)
+          s = s.slice(0, -1) + GLYPHS[(Math.random() * GLYPHS.length) | 0];
+        tout.textContent = base + s;
+      }
+    }, 16);
+  }
+
+  var ORACLE = ["yes. but write it in CLAUDE.md first.",
+    "the transcripts say no.", "ask again after /retro.",
+    "42. obviously.", "signs point to `git blame`."];
+  var UNKNOWN = ["command not found. but it was recorded.",
+    "segmentation fault (core dumped). just kidding.",
+    "i'm a landing page, not a shell. but try `doom`.",
+    "unknown command. the agent would have tried it anyway."];
+  var unkI = 0;
+
+  function eliza(cmd) {
+    var c = cmd.toLowerCase();
+    if (/привет|hello|hi\b|хай/.test(c)) return "hello, human. i read your transcripts. all of them.";
+    if (/claude|agent|gpt|ai/.test(c)) return 'the agent is listening. it says: "you\'re right."';
+    if (/\?$/.test(c)) return ORACLE[(Math.random() * ORACLE.length) | 0];
+    return UNKNOWN[unkI++ % UNKNOWN.length];
+  }
+
+  function run(raw) {
+    var cmd = raw.trim();
+    tout.textContent += "guest@retro:~$ " + cmd + "\n";
+    trimOut();
+    if (!cmd) return;
+    histCmd.push(cmd); histIdx = histCmd.length;
+    var c = cmd.toLowerCase();
+    var arg = cmd.split(/\s+/).slice(1).join(" ");
+
+    if (vimMode) {
+      if (/^:(q!?|wq|x)$/.test(c)) { vimMode = false; out("vim closed. you are free now."); }
+      else out("E37: no write since last change (add ! to override)");
+      return;
+    }
+    if (/^(iddqd|idkfa|idspispopd|doom(\.exe)?)$/.test(c)) return openDoom(c);
+    if (c === "help") return out("commands: ls  cat  cd  pwd  whoami  uname  date  echo\n" +
+      "          ping  sudo  vim  history  matrix  clear  exit\n" +
+      "cheat codes work here. the id software kind.");
+    if (c === "ls" || c === "dir" || c === "ls -la") return out(
+      "transcripts/     1.3G   corrections.log   221\n" +
+      "rules.md          7     doom.wad          4M\n" +
+      ".secrets         ---    you.are.here      1");
+    if (c.indexOf("cat") === 0) {
+      if (/doom/.test(arg)) return openDoom("doom.wad");
+      if (/secret/.test(arg)) return out("cat: .secrets: permission denied. nice try.");
+      if (/corrections/.test(arg)) return out(
+        '221 lines. highlights:\n  "не так" ×34\n  "no, not like that" ×28\n  "..." (just esc) ×40');
+      if (/rules/.test(arg)) return out("+ never type the same correction twice.");
+      return out("cat: " + (arg || "?") + ": no such file");
+    }
+    if (c.indexOf("cd") === 0) return out("there is nowhere else to go.");
+    if (c === "pwd") return out("/home/guest/regrets");
+    if (c === "whoami") return out('the human who says "no, not like that"');
+    if (c.indexOf("uname") === 0) return out("RETRO-DOS 0.3.0 (never fine-tuned)");
+    if (c === "date") return out(new Date().toString().slice(0, 24) + "\n...feels like 1993-12-10 again.");
+    if (c.indexOf("echo") === 0) return out(arg || "");
+    if (c.indexOf("sudo") === 0) return out("guest is not in the sudoers file.\nthis incident will be reported to CLAUDE.md.");
+    if (/^rm(\s|$)/.test(c)) return out("removing /usr... removing /home...\nremoving retro... ✗ permission denied.\nyour transcripts are yours. even from you.");
+    if (c === "vim" || c === "vi") { vimMode = true; return out('entering vim. good luck getting out. (hint: ":q!")'); }
+    if (c === "emacs") return out("M-x doom");
+    if (c === "matrix") return matrix();
+    if (c.indexOf("ping") === 0) return out("PONG from " + (arg || "claude") + ': "you\'re right." time=61ms');
+    if (c === "history") return out(histCmd.join("\n"));
+    if (c === "star" || c === "github") { window.open("https://github.com/craftwork-design/retro"); return out("opening the repo. stars appreciated."); }
+    if (c === "retro" || c === "/retro") return out("already installed here. you're soaking in it.\non your machine: github.com/craftwork-design/retro");
+    if (c === "clear" || c === "cls") { tout.textContent = ""; return; }
+    if (c === "exit" || c === "logout") return out("there is no escape from the transcript.\neverything is recorded.");
+    if (c === "hack" || c === "hack the planet") return out("ACCESS GRANTED (to your own transcripts)");
+    out(eliza(cmd));
+  }
+
+  term.addEventListener("click", function () { tkb.focus({ preventScroll: true }); });
+  tkb.addEventListener("input", function () { tin.textContent = tkb.value; });
+  tkb.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") {
+      var v = tkb.value; tkb.value = ""; tin.textContent = "";
+      run(v);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (histIdx > 0) { histIdx--; tkb.value = histCmd[histIdx] || ""; tin.textContent = tkb.value; }
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      histIdx = Math.min(histIdx + 1, histCmd.length);
+      tkb.value = histCmd[histIdx] || ""; tin.textContent = tkb.value;
+    }
+  });
+
+  // ---------- DOOM.EXE ----------
+  var doomEl = null, fireT = null;
+  function openDoom(code) {
+    out(code === "idspispopd"
+      ? "walls are solid here. opening the real thing..."
+      : "cheat accepted. degreelessness mode... loading DOOM.EXE");
+    if (!doomEl) {
+      doomEl = document.createElement("div");
+      doomEl.id = "doomwin";
+      doomEl.innerHTML =
+        '<div class="win"><div class="bar"><span>DOOM.EXE ─ shareware</span>' +
+        '<button id="doomx">[x]</button></div>' +
+        '<pre class="fire"></pre>' +
+        '<iframe title="DOOM" allow="fullscreen; autoplay"></iframe>' +
+        '<div class="hint">esc closes · click inside for sound · knee-deep in the dead</div></div>';
+      document.body.appendChild(doomEl);
+      doomEl.querySelector("#doomx").addEventListener("click", closeDoom);
+      doomEl.addEventListener("click", function (e) { if (e.target === doomEl) closeDoom(); });
+    }
+    doomEl.style.display = "flex";
+    var fr = doomEl.querySelector("iframe");
+    if (!fr.src) fr.src = "https://archive.org/embed/DoomsharewareEpisode";
+    startFire();
+  }
+  function closeDoom() {
+    if (doomEl) doomEl.style.display = "none";
+    if (fireT) { clearInterval(fireT); fireT = null; }
+  }
+  function startFire() {
+    if (REDUCED || fireT) return;
+    var pre = doomEl.querySelector(".fire");
+    var W = 66, H = 7, P = " .:░▒▓█", g = [];
+    for (var y = 0; y < H; y++) { g.push([]); for (var x = 0; x < W; x++) g[y].push(0); }
+    fireT = setInterval(function () {
+      for (var x = 0; x < W; x++) g[H - 1][x] = 4 + ((Math.random() * 3) | 0);
+      for (var y = 0; y < H - 1; y++)
+        for (var x = 0; x < W; x++) {
+          var sx = Math.min(W - 1, Math.max(0, x + ((Math.random() * 3) | 0) - 1));
+          g[y][x] = Math.max(0, g[y + 1][sx] - (Math.random() < 0.55 ? 1 : 0));
+        }
+      var s = "";
+      for (var y = 0; y < H; y++) {
+        for (var x = 0; x < W; x++) s += P[g[y][x]];
+        s += "\n";
+      }
+      pre.textContent = s;
+    }, 90);
+  }
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") closeDoom();
+  });
+
+  // ---------- matrix ----------
+  var matrixOn = false;
+  function matrix() {
+    if (matrixOn) return;
+    matrixOn = true;
+    out("wake up, neo... (6 seconds)");
+    var cv = document.createElement("canvas");
+    cv.id = "matrixfx";
+    cv.width = innerWidth; cv.height = innerHeight;
+    document.body.appendChild(cv);
+    var ctx = cv.getContext("2d");
+    var cols = Math.floor(cv.width / 14), drops = [];
+    for (var i = 0; i < cols; i++) drops.push((Math.random() * -40) | 0);
+    var K = "ｱｲｳｴｵｶｷｸｹｺ01▓▒░retro";
+    var t = setInterval(function () {
+      ctx.fillStyle = "rgba(0,0,0,0.12)";
+      ctx.fillRect(0, 0, cv.width, cv.height);
+      ctx.fillStyle = "#00ff41";
+      ctx.font = "14px monospace";
+      for (var i = 0; i < cols; i++) {
+        ctx.fillText(K[(Math.random() * K.length) | 0], i * 14, drops[i] * 14);
+        if (drops[i] * 14 > cv.height && Math.random() > 0.97) drops[i] = 0;
+        drops[i]++;
+      }
+    }, 50);
+    setTimeout(function () {
+      clearInterval(t); cv.remove(); matrixOn = false;
+    }, 6000);
+  }
+
+  if (REDUCED) { startArt(); return; }
 
   // typewriter: collect every text node in order, clear, then retype fast.
   // the tail of the typed region briefly shows wrong glyphs — a glitch
