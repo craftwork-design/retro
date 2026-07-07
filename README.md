@@ -1,6 +1,8 @@
 # retro
 
-**Your coding agent keeps making the same mistakes. You keep typing the same corrections. Stop.**
+**Never type the same correction twice.**
+
+Your coding agent keeps making the same mistakes. You keep typing the same corrections. Every one of them is already written down, in transcripts nobody reads.
 
 Every Claude Code session you ever ran is sitting in `~/.claude/projects/` as a full transcript. Inside those files is a precise record of every time the agent got it wrong: every "no, not like that", every Esc you hit mid-action, every command it retried five times, every session you rage-quit after a failure.
 

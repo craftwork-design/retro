@@ -2,11 +2,13 @@
 name: retro
 description: >
   Weekly retro for your coding agent. Scans local Claude Code transcripts for
-  recurring friction (user corrections, interruptions, retry loops, permission
-  denials, abandoned sessions), clusters the patterns, and proposes
-  evidence-backed improvements to CLAUDE.md, skills, hooks, and permissions.
-  Use when the user runs /retro or asks why the agent keeps making the same
-  mistakes, what keeps going wrong, or how to improve their agent setup.
+  recurring friction (corrections, agent admissions like "you're right",
+  instructions repeated across sessions, dictated rules, interrupts, nudges,
+  retry loops, denials, abandoned sessions), clusters the patterns, and
+  proposes evidence-backed improvements to CLAUDE.md, skills, hooks, and
+  permissions. Use when the user runs /retro or asks why the agent keeps
+  making the same mistakes, what keeps going wrong, or how to improve their
+  agent setup.
 ---
 
 # retro — turn your agent's failures into harness improvements
@@ -47,9 +49,17 @@ or being ignored, versus failures no rule could have prevented.
 From the JSON, identify at most 5 recurring patterns. A pattern needs at
 least 2 independent occurrences; ignore one-offs. For each candidate, check
 the excerpts yourself: a "correction" flagged by the scanner may be a normal
-instruction — drop those. Each correction carries `reasons` tags
-(correction / failure_report / redo / post_interrupt / repeat_paste /
-frustration) — weigh multi-reason and frustration-tagged entries higher.
+instruction — drop those. Each correction carries `reasons` tags. Weigh them
+in this order (strongest first):
+
+1. `after_success_claim` — the agent said "done/fixed" and the user came back
+   with a failure. Near-certain friction, and the most expensive kind.
+2. `frustration` — the user is visibly angry; whatever caused it matters.
+3. `post_interrupt` — the user hit Esc and redirected. ~70% are real.
+4. `failure_report` — something the agent built or claimed broke.
+5. `correction` / `redo` / `repeat_paste` — real but noisier; verify quotes.
+
+Multi-reason entries outrank single-reason ones.
 
 Start with the highest-yield fields:
 
@@ -73,6 +83,22 @@ Typical real patterns:
 If you need more context on a specific session, its transcript is at
 `~/.claude/projects/<munged-project-path>/<session-id>.jsonl` — read
 selectively (grep around the relevant timestamps), transcripts are large.
+
+## Step 3.5 — fan out to subagents when the report is large
+
+If the scan yields more than ~40 corrections+admissions, or 5+ candidate
+patterns, do not judge everything in this context — you will skim and miss.
+Spawn one verification subagent per candidate pattern (Agent/Task tool, in
+parallel). Give each subagent: the pattern name, its excerpts with session
+ids and timestamps, the transcript directory path, and this instruction:
+
+> Verify this candidate pattern against the raw transcripts. Return:
+> CONFIRMED or REJECTED, the 2 best verbatim quotes with dates, a one-line
+> root cause, and a proposed minimal rule. Reject if the quotes read as
+> normal instructions rather than friction.
+
+Then judge the returned evidence yourself and keep at most 5 confirmed
+patterns. Subagents read transcripts locally; nothing leaves the machine.
 
 ## Step 4 — write the retro
 

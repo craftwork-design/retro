@@ -106,6 +106,14 @@ CONTINUATION_RE = rx(
     r"^(продолжай|продолжи|давай|дальше|continue|go on|да|ага|запускай|ок|okay|ok|yes)[.!)\s…]*$",
 )
 
+# the assistant claiming success; a failure report right after one is the
+# strongest friction signal there is
+SUCCESS_CLAIM_RE = rx(
+    r"(?<!\w)(готово|сделано|исправил|исправлено|починил|запущено|заработало|"
+    r"все работает|всё работает|done|fixed|deployed|completed|working now|"
+    r"should work now|works now|ready)(?!\w)",
+)
+
 # assistant self-admissions: the agent conceding it was wrong
 ADMISSION_RE = rx(
     r"you'?re (absolutely |completely |totally )?right\b", r"\bmy (mistake|bad|error)\b",
@@ -276,9 +284,33 @@ def tool_key(name, inp):
     return ""
 
 
+# light suffix-stripping stemmer: folds "запусти/запустил/запускай" and
+# "commit/commits/committed" into one token for clustering. O(1) per word.
+_RU_SUFFIXES = sorted(
+    ("иями ями ами иях ях ах ией ого его ому ему ыми ими ете ите йте ешь ишь "
+     "ает яет ует ают яют уют ать ять еть ить уть ой ый ий ая яя ое ее ие "
+     "ые ов ев ом ем ам ям ей ью ья ье ал ял ел ил ла ло ли ся сь ем им ит "
+     "ат ят ут ют у ю а я о е ы и ь").split(),
+    key=len, reverse=True,
+)
+_EN_SUFFIXES = ("ing", "ed", "es", "ly", "s")
+
+
+def stem(w):
+    if w[0].isascii():
+        for suf in _EN_SUFFIXES:
+            if w.endswith(suf) and len(w) - len(suf) >= 3:
+                return w[: -len(suf)]
+        return w
+    for suf in _RU_SUFFIXES:
+        if w.endswith(suf) and len(w) - len(suf) >= 3:
+            return w[: -len(suf)]
+    return w
+
+
 def tokens_of(text):
     return {
-        w for w in re.findall(r"[a-zа-яё0-9']+", text.lower())
+        stem(w) for w in re.findall(r"[a-zа-яё0-9']+", text.lower())
         if len(w) >= 3 and w not in STOPWORDS
     }
 
@@ -309,6 +341,7 @@ def parse_session(path, max_excerpt):
     prev_user_text = None
     prev_user_norm = None
     admission_since_user = False
+    last_assistant_claim = False
 
     try:
         fh = open(path, "r", encoding="utf-8", errors="replace")
@@ -363,6 +396,9 @@ def parse_session(path, max_excerpt):
                         if not text:
                             continue
                         last_event = "assistant_text"
+                        last_assistant_claim = bool(
+                            hits(SUCCESS_CLAIM_RE, text[-400:].lower())
+                        )
                         if not admission_since_user and prev_user_text:
                             tl = text.lower().lstrip()
                             if hits(ADMISSION_RE, tl) or hits(ADMISSION_ANCHORED_RE, tl):
@@ -441,6 +477,11 @@ def parse_session(path, max_excerpt):
 
                 if not is_first:
                     score, reasons = classify_user_msg(text)
+                    if last_assistant_claim and (
+                        "failure_report" in reasons or "correction" in reasons
+                    ):
+                        reasons.append("after_success_claim")
+                        score += 2
                     if prev_was_interrupt and not hits(CONTINUATION_RE, tl):
                         reasons.append("post_interrupt")
                         score = max(score, 2)
@@ -537,6 +578,9 @@ def cluster_repeats(msgs):
                 seen_pairs.add(pair)
                 ta, tb = msgs[pair[0]]["tokens"], msgs[pair[1]]["tokens"]
                 inter = len(ta & tb)
+                # binary Jaccard on stemmed tokens; do NOT down-weight
+                # frequent tokens here — repeated instructions are frequent
+                # by definition, that's the whole point
                 if inter >= 2 and inter / len(ta | tb) >= 0.5:
                     parent[find(pair[0])] = find(pair[1])
 
