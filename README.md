@@ -12,23 +12,34 @@ Every Claude Code session you ever ran is sitting in `~/.claude/projects/` as a 
 your failures → clusters → evidence → a concrete CLAUDE.md diff
 ```
 
-This is the [Replit-style self-improvement loop](https://blog.replit.com), applied to the harness you already own. No fine-tuning, no API keys, no telemetry. Continual learning at the layer you can actually change.
+This is the Replit-style self-improvement loop (production failures → clusters → evidence → patches), applied to the harness you already own. No fine-tuning, no API keys, no telemetry. Continual learning at the layer you can actually change.
+
+## Isn't this just /insights?
+
+Claude Code's built-in `/insights` gives you a great 30-day usage report with suggestions. retro is a different tool for a different job:
+
+- **Evidence, not summaries.** Every proposed rule comes with verbatim quotes from your transcripts, dated. You see exactly which failures a rule would have prevented, and can veto it.
+- **Signals /insights doesn't mine.** The agent admitting "you're right" (69 times in my last 45 days), instructions you repeat across sessions (found one I had typed in 8 different sessions), rules you dictated out loud ("запомни, отныне..."), Esc-interrupts and what you said right after.
+- **Closes the loop.** retro doesn't stop at suggestions: it drafts the CLAUDE.md diff, you confirm, it applies.
+- **Inspectable and hackable.** One stdlib Python file, deterministic, bilingual (EN/RU) with pluggable language packs, custom windows (`7d`/`90d`/`all`), JSON output you can pipe anywhere.
+
+Use both: `/insights` for the big picture, `/retro` for turning failures into rules.
 
 ## Install
-
-```bash
-git clone https://github.com/craftwork-design/retro.git /tmp/retro-skill
-mkdir -p ~/.claude/skills
-cp -r /tmp/retro-skill/skill ~/.claude/skills/retro
-```
-
-Or with the installer:
 
 ```bash
 git clone https://github.com/craftwork-design/retro.git && cd retro && ./install.sh
 ```
 
-Requires Python 3.8+ (stdlib only, no dependencies).
+Manual install (also works for updating):
+
+```bash
+TMP=$(mktemp -d) && git clone https://github.com/craftwork-design/retro.git "$TMP" \
+  && rm -rf ~/.claude/skills/retro && mkdir -p ~/.claude/skills \
+  && cp -r "$TMP/skill" ~/.claude/skills/retro
+```
+
+Requires Python 3.8+ (stdlib only, no dependencies). On Windows, use Git Bash for the commands above and `python` instead of `python3`. If you use a custom `CLAUDE_CONFIG_DIR`, both the installer and the scanner respect it.
 
 ## Use
 
@@ -71,7 +82,7 @@ Roughly half of the signals are language-agnostic by construction: interrupts, n
 Other languages plug in as a JSON pattern pack, no code changes:
 
 ```bash
-python3 scan.py --patterns skill/patterns/example-es.json
+python3 skill/scripts/scan.py --patterns skill/patterns/example-es.json
 ```
 
 See [skill/patterns/example-es.json](skill/patterns/example-es.json) for the format. Language pack PRs are very welcome.
@@ -100,7 +111,7 @@ See [examples/report-example.md](examples/report-example.md) for a full report.
 
 ## Privacy
 
-Everything runs on your machine. The scanner is ~400 lines of stdlib Python you can read in five minutes. No network calls, no telemetry, nothing leaves your laptop. Your transcripts are yours.
+Everything runs on your machine. The scanner is a single stdlib Python file you can read end to end. No network calls, no telemetry, nothing leaves your laptop. Your transcripts are yours.
 
 ## Roadmap
 

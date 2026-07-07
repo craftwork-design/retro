@@ -10,6 +10,8 @@ if [ ! -f "$SRC/SKILL.md" ]; then
   exit 1
 fi
 
+# clean install: never leave stale files from a previous version behind
+rm -rf "$DEST"
 mkdir -p "$DEST"
 cp -R "$SRC/." "$DEST/"
 chmod +x "$DEST/scripts/scan.py"

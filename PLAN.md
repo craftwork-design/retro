@@ -11,7 +11,7 @@ harness level, no model weights required.
 
 - Replit showed the pattern: production failures → clusters → hypotheses → patches → evidence → ship.
 - Every Claude Code user already has the raw material: full JSONL transcripts in `~/.claude/projects/`.
-- Existing tools (claude-code-log, claude-session-analyzer, transcript viewers) stop at "view and measure". Nobody closes the loop to "here is the diff".
+- Existing tools stop earlier: transcript viewers "view and measure"; built-in `/insights` summarizes usage and suggests rules but doesn't mine friction signals (admissions, cross-session repeats, post-Esc redirects), doesn't quote evidence, and doesn't apply the diff. Positioning: "use /insights for the big picture, /retro to turn failures into rules". Known name collisions: several small "retro/retrospective" skills exist on mcpmarket/GitHub — they reflect on the current session only; our differentiator is mining ALL transcripts with evidence.
 
 ## MVP (v0.1 — this repo)
 
@@ -33,7 +33,7 @@ Everything runs locally. No telemetry, no uploads.
 ## v0.2
 
 - `--html` shareable report (anonymized numbers only)
-- Cross-project scan and comparison
+- Plugin packaging (`.claude-plugin/plugin.json` + marketplace) for versioned install/update via `/plugin install`
 - Hook suggestions (auto-generate settings.json hooks from denial patterns)
 - Weekly cadence: `/loop`-friendly mode + saved report history to track whether fixes actually reduced friction
 

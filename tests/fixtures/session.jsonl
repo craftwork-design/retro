@@ -1,0 +1,15 @@
+{"type":"user","message":{"role":"user","content":[{"type":"text","text":"сделай лендинг для нового проекта"}]},"timestamp":"2026-07-01T10:00:00.000Z","sessionId":"fixture"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Сделал лендинг. Готово, все работает."}]},"timestamp":"2026-07-01T10:05:00.000Z","sessionId":"fixture"}
+{"type":"user","message":{"role":"user","content":[{"type":"text","text":"не работает, в консоли ошибка при загрузке"}]},"timestamp":"2026-07-01T10:06:00.000Z","sessionId":"fixture"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Ты прав, я ошибся: забыл подключить скрипт."}]},"timestamp":"2026-07-01T10:07:00.000Z","sessionId":"fixture"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_01","name":"Bash","input":{"command":"npm test"}}]},"timestamp":"2026-07-01T10:08:00.000Z","sessionId":"fixture"}
+{"type":"user","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_01","is_error":true,"content":"npm ERR! Missing script: test"}]},"timestamp":"2026-07-01T10:08:10.000Z","sessionId":"fixture"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_02","name":"Bash","input":{"command":"npm test"}}]},"timestamp":"2026-07-01T10:08:20.000Z","sessionId":"fixture"}
+{"type":"user","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_02","is_error":true,"content":"npm ERR! Missing script: test"}]},"timestamp":"2026-07-01T10:08:30.000Z","sessionId":"fixture"}
+{"type":"assistant","message":{"role":"assistant","content":[{"type":"tool_use","id":"toolu_03","name":"Bash","input":{"command":"npm test"}}]},"timestamp":"2026-07-01T10:08:40.000Z","sessionId":"fixture"}
+{"type":"user","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_03","is_error":true,"content":"npm ERR! Missing script: test"}]},"timestamp":"2026-07-01T10:08:50.000Z","sessionId":"fixture"}
+{"type":"user","message":{"role":"user","content":[{"type":"text","text":"[Request interrupted by user]"}]},"timestamp":"2026-07-01T10:09:00.000Z","sessionId":"fixture"}
+{"type":"user","message":{"role":"user","content":[{"type":"text","text":"не лезь в папку secrets, туда нельзя"}]},"timestamp":"2026-07-01T10:09:10.000Z","sessionId":"fixture"}
+{"type":"user","message":{"role":"user","content":[{"type":"text","text":"запомни, отныне всегда отвечай кратко и на русском"}]},"timestamp":"2026-07-01T10:10:00.000Z","sessionId":"fixture"}
+{"type":"user","message":{"role":"user","content":[{"type":"text","text":"продолжай"}]},"timestamp":"2026-07-01T10:11:00.000Z","sessionId":"fixture"}
+{"type":"user","message":{"role":"user","content":[{"type":"text","text":"<ide_opened_file>The user opened /x.ts</ide_opened_file>\nдавай покороче описание"}]},"timestamp":"2026-07-01T10:12:00.000Z","sessionId":"fixture"}
