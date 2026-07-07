@@ -15,7 +15,7 @@ This is the [Replit-style self-improvement loop](https://blog.replit.com), appli
 ## Install
 
 ```bash
-git clone https://github.com/kuzindenis/retro.git /tmp/retro-skill
+git clone https://github.com/craftwork-design/retro.git /tmp/retro-skill
 mkdir -p ~/.claude/skills
 cp -r /tmp/retro-skill/skill ~/.claude/skills/retro
 ```
@@ -23,7 +23,7 @@ cp -r /tmp/retro-skill/skill ~/.claude/skills/retro
 Or with the installer:
 
 ```bash
-git clone https://github.com/kuzindenis/retro.git && cd retro && ./install.sh
+git clone https://github.com/craftwork-design/retro.git && cd retro && ./install.sh
 ```
 
 Requires Python 3.8+ (stdlib only, no dependencies).
@@ -89,7 +89,7 @@ Everything runs on your machine. The scanner is ~400 lines of stdlib Python you 
 - [ ] HTML report you can actually share (numbers only, no transcript content)
 - [ ] Hook suggestions generated from denial patterns
 - [ ] Report history: did last week's fixes reduce this week's corrections?
-- [ ] **retro for teams**: one shared set of lessons across 20 engineers, synced rules registry, weekly PR into your repo with evidence. If that sounds like your team, open an issue or ping [@kuzindenis](https://x.com/kuzindenis).
+- [ ] **retro for teams**: one shared set of lessons across 20 engineers, synced rules registry, weekly PR into your repo with evidence. If that sounds like your team, open an issue on this repo.
 
 ## License
 
