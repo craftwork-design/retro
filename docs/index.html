@@ -77,6 +77,17 @@
   .cmd { cursor: pointer; }
   .cmd:hover { background: var(--fg); color: var(--bg); }
   .cmd:hover .dim { color: var(--bg); }
+  .plaque {
+    display: inline-block;
+    min-height: 1.5em;
+    color: var(--dim);
+    user-select: none;
+  }
+  .plaque.blue {
+    background: #0000aa;
+    color: #ffffff;
+    padding: 0 0.75ch;
+  }
   .num { display: inline-block; min-width: 4ch; text-align: right; font-weight: 700; }
   .caret {
     display: inline-block; width: 0.62em; height: 1.15em;
@@ -95,19 +106,19 @@
     <button id="theme" aria-label="toggle theme">[☾]</button>
   </div>
 
-  <pre class="block art" aria-hidden="true">    ╔═════════════════╗
-    ║ ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ ║   <span class="dim">&lt;- your transcripts, 1.3 GB</span>
-    ╚═╗▒▒▒▒▒▒▒▒▒▒▒▒▒╔═╝      <span class="dim">nobody ever reads them</span>
-      ╚═╗▒▒▒▒▒▒▒▒▒╔═╝
-        ╚═╗▒▒▒▒▒╔═╝
-          ╚═╗░╔═╝
-            ║░║          <span class="dim">&lt;- /retro</span>
-          ╔═╝░╚═╗
-        ╔═╝  ░  ╚═╗
-      ╔═╝    ░    ╚═╗
-    ╔═╝ ▓▓▓▓▓░▓▓▓▓▓ ╚═╗
-    ║ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ ║   <span class="dim">&lt;- CLAUDE.md rules</span>
-    ╚═════════════════╝</pre>
+  <pre class="block art" aria-hidden="true">╔═════════════════╗
+║ ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ ║   <span class="dim">&lt;- your transcripts, 1.3 GB</span>
+╚═╗▒▒▒▒▒▒▒▒▒▒▒▒▒╔═╝      <span class="dim">nobody ever reads them</span>
+  ╚═╗▒▒▒▒▒▒▒▒▒╔═╝
+    ╚═╗▒▒▒▒▒╔═╝
+      ╚═╗░╔═╝
+        ║░║          <span class="dim">&lt;- /retro</span>
+      ╔═╝░╚═╗
+    ╔═╝  ░  ╚═╗
+  ╔═╝    ░    ╚═╗
+╔═╝ ▓▓▓▓▓░▓▓▓▓▓ ╚═╗
+║ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ ║   <span class="dim">&lt;- CLAUDE.md rules</span>
+╚═════════════════╝</pre>
 
   <pre class="block"><strong>never type the same correction twice.</strong></pre>
 
@@ -215,20 +226,59 @@ with quotes and dates attached. use both.</pre>
     syncIcon();
   });
 
-  // click-to-copy on commands
+  var GLYPHS = "▓▒░#%&@*+=<>/\\_";
+  var REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // copy-to-clipboard commands: hover tries to copy right away (browsers
+  // that demand a real gesture get a hint instead), click always copies.
+  // feedback types itself onto a DOS-blue plaque below the command.
   document.querySelectorAll(".cmd").forEach(function (el) {
-    el.title = "click to copy";
+    var plaque = document.createElement("span");
+    plaque.className = "plaque";
+    el.parentNode.insertBefore(document.createTextNode("\n"), el.nextSibling);
+    el.parentNode.insertBefore(plaque, el.nextSibling.nextSibling);
+
+    function typePlaque(text, blue) {
+      plaque.classList.toggle("blue", blue);
+      if (plaque._t) clearInterval(plaque._t);
+      if (REDUCED) { plaque.textContent = text; return; }
+      var i = 0;
+      plaque._t = setInterval(function () {
+        i++;
+        var s = text.slice(0, i);
+        if (i < text.length && Math.random() < 0.6) {
+          s = s.slice(0, -1) + GLYPHS[(Math.random() * GLYPHS.length) | 0];
+        }
+        plaque.textContent = s;
+        if (i >= text.length) clearInterval(plaque._t);
+      }, 26);
+    }
+    function copy() {
+      return navigator.clipboard
+        ? navigator.clipboard.writeText(el.dataset.copy)
+        : Promise.reject();
+    }
+    el.addEventListener("mouseenter", function () {
+      copy().then(
+        function () { typePlaque("# copied to clipboard", true); },
+        function () { typePlaque("# click to copy", false); }
+      );
+    });
     el.addEventListener("click", function () {
-      if (navigator.clipboard) navigator.clipboard.writeText(el.dataset.copy);
+      copy().then(function () { typePlaque("# copied to clipboard", true); });
+    });
+    el.addEventListener("mouseleave", function () {
+      if (plaque._t) clearInterval(plaque._t);
+      plaque.textContent = "";
+      plaque.classList.remove("blue");
     });
   });
 
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (REDUCED) return;
 
   // typewriter: collect every text node in order, clear, then retype fast.
   // the tail of the typed region briefly shows wrong glyphs — a glitch
   // artifact, not a headline effect.
-  var GLYPHS = "▓▒░#%&@*+=<>/\\_";
   var walker = document.createTreeWalker(
     document.getElementById("page"), NodeFilter.SHOW_TEXT, null
   );
