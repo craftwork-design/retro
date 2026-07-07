@@ -61,6 +61,21 @@ Read the project's `CLAUDE.md` (also check `claude.md` / `Claude.md` and
 a rule is missing, unclear, or being ignored, versus failures no rule could
 have prevented.
 
+**Check the rule's age against the failures' dates before you claim "the
+rule was ignored".** A rule that already covers a failure has three possible
+readings, and they lead to different fixes:
+
+1. The rule predates the failures → it exists but the agent doesn't act on
+   it. Fix: harden it into a blocking gate, not a fresh rule.
+2. The rule was added *after* the failures (often as a reaction to them) →
+   the failures are already addressed; do not re-report them as open.
+3. No rule covered it → propose a new rule.
+
+Compare `git log -1 --format=%cI -- CLAUDE.md` (or the file mtime) and, if
+you can, `git blame` the specific line against the `ts` of the evidence
+quotes. If you cannot establish the order, say so in the report rather than
+asserting the rule was ignored.
+
 If no project CLAUDE.md exists, the Step 4 diff becomes a proposed new file:
 say "create `<project>/CLAUDE.md`" and show its full contents. Rules that
 describe the user rather than one project (reply language, tone, commit
@@ -86,8 +101,10 @@ Start with the highest-yield fields:
   rule by definition: reject clusters that are per-task go-ahead commands
   the user must issue deliberately (deploy, "commit this now"), and clusters
   already covered by CLAUDE.md — those become "rule exists but isn't
-  followed", which is a different fix (sharpen the rule's wording or move it
-  higher in the file).
+  followed", which is a different fix (harden the rule into a blocking gate,
+  sharpen its wording, or move it higher in the file) — but first confirm
+  the rule predates the failures, per Step 2, or you will re-report a fix
+  that already landed.
 - `admissions` — the agent conceded a mistake; `user_text` holds what the
   user complained about, `admission` often names the root cause.
 - `error_loops` — the same tool+target failing 2+ times: the source for

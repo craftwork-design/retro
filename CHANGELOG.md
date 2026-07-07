@@ -4,7 +4,9 @@
 
 - Light ru/en stemmer for cross-session clustering; real clusters grew
 - `after_success_claim`: failure reports right after the agent claimed success
-- SKILL.md: reason-tag weighting, subagent fan-out for large reports
+- SKILL.md: reason-tag weighting, subagent fan-out for large reports,
+  rule-age check (predates vs postdates failures) before claiming a rule
+  was ignored — found via a live end-to-end run on a real project
 - Clean-install installer (no stale files on upgrade), fixed README commands
 - "vs /insights" positioning section
 - CI smoke test (fixture transcript, macOS + Linux, Python 3.8/3.12)
