@@ -310,7 +310,7 @@ with quotes and dates attached. use both.</pre>
     '█▀▄ █▀▀  █  █▀▄ █ █\n' +
     '▀ ▀ ▀▀▀  ▀  ▀ ▀ ▀▀▀\n' +
     '<span class="a0">░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓</span>\n' +
-    '   <span class="dim">transcripts → rules</span>',
+    '<span class="dim">transcripts → rules</span>',
     tick: function (el, f) {
       var band = "░░▒▓█▓▒░", s = "";
       for (var i = 0; i < 19; i++) s += band[(i + f) % band.length];
@@ -362,22 +362,24 @@ with quotes and dates attached. use both.</pre>
       q(el, "a1").textContent = lit ? "░▓░" : "▓▓▓";
     } },
   // 4. cassette: the tape band scrolls between the two reels
-  { ms: 150, cap: "every session, on tape", h:
-    ' ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄\n' +
-    '▐██████████████████▌\n' +
-    '▐█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█▌\n' +
-    '▐█░░  RETRO  TAPE ░█▌\n' +
-    '▐█░ ▟█▙ <span class="a0">░░▒▒░░</span> ▟█▙ █▌\n' +
-    '▐█░ ▜█▛ <span class="a1">░░▒▒░░</span> ▜█▛ █▌\n' +
-    '▐█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█▌\n' +
-    '▐██▄▄▄▄▄▄▄▄▄▄▄▄▄▄██▌\n' +
-    ' ▀██▀        ▀██▀\n' +
+  { ms: 160, cap: "every session, on tape", h:
+    '╔═══════════════════╗\n' +
+    '║ ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄ ║\n' +
+    '║ █ RETRO · TAPE  █ ║\n' +
+    '║ ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀ ║\n' +
+    '║   ▟▀▙       ▟▀▙   ║\n' +
+    '║   █<span class="a0">O</span>█  <span class="a2">▒▒▒</span>  █<span class="a1">O</span>█   ║\n' +
+    '║   ▜▄▛       ▜▄▛   ║\n' +
+    '╚══╦═════════════╦══╝\n' +
+    '   ▀             ▀   \n' +
     '  <span class="dim">every session, on tape</span>',
     tick: function (el, f) {
-      var band = "░░▒▒▓▓", s = "";
-      for (var i = 0; i < 6; i++) s += band[(i + f) % band.length];
-      q(el, "a0").textContent = s;
-      q(el, "a1").textContent = s;
+      var hub = "O0oø";
+      q(el, "a0").textContent = hub[f % 4];
+      q(el, "a1").textContent = hub[f % 4];
+      var band = "░▒▓", s = "";
+      for (var i = 0; i < 3; i++) s += band[(i + f) % 3];
+      q(el, "a2").textContent = s;
     } },
   // 5. eye: the iris glint sweeps; it blinks now and then
   { ms: 170, cap: "it reads every session", h:
