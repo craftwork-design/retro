@@ -566,9 +566,14 @@ with quotes and dates attached. use both.</pre>
       return out(" ┌" + bar + "┐\n │ " + m + " │\n └" + bar + "┘\n" +
         "        \\   ^__^\n         \\  (oo)\\_______\n            (__)\\       )\\/\\\n                ||----w |\n                ||     ||");
     }
-    if (/^\d+\s*[-+*/]\s*\d+$/.test(c)) {
-      try { return out(String(Function("return " + c.replace(/[^0-9+\-*/.() ]/g, ""))())); }
-      catch (e) { return out("math is hard. that's what the agent said too."); }
+    var calc = c.match(/^(\d+)\s*([-+*/])\s*(\d+)$/);
+    if (calc) {
+      var left = Number(calc[1]), right = Number(calc[3]), result = 0;
+      if (calc[2] === "+") result = left + right;
+      else if (calc[2] === "-") result = left - right;
+      else if (calc[2] === "*") result = left * right;
+      else result = left / right;
+      return out(String(result));
     }
     if (c === "konami") return out("↑↑↓↓←→←→ B A — try it on your keyboard.");
     out(eliza(cmd));

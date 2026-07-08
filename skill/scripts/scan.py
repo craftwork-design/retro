@@ -150,10 +150,19 @@ def load_patterns(path):
     if not isinstance(data, dict):
         raise ValueError("patterns file must be a JSON object of {class: [regex, ...]}")
     for cls, pats in data.items():
-        if cls in PATTERN_CLASSES and isinstance(pats, list):
-            PATTERN_CLASSES[cls].extend(
-                re.compile(p, re.I | re.U) for p in pats if isinstance(p, str)
-            )
+        if cls.startswith("_"):
+            continue
+        if cls not in PATTERN_CLASSES:
+            known = ", ".join(sorted(PATTERN_CLASSES))
+            raise ValueError(f"unknown pattern class {cls!r}; expected one of: {known}")
+        if not isinstance(pats, list):
+            raise ValueError(f"pattern class {cls!r} must be a list of regex strings")
+        compiled = []
+        for i, pat in enumerate(pats):
+            if not isinstance(pat, str):
+                raise ValueError(f"pattern {cls}[{i}] must be a string")
+            compiled.append(re.compile(pat, re.I | re.U))
+        PATTERN_CLASSES[cls].extend(compiled)
 
 
 DENIAL_MARKERS = [

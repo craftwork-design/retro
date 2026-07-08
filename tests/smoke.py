@@ -72,6 +72,29 @@ def main():
         )
         assert out2.returncode == 0, f"pretty mode exited {out2.returncode}"
         print("PASS  pretty mode")
+
+        out3 = subprocess.run(
+            [sys.executable, str(SCANNER), "--project", str(project),
+             "--days", "36500", "--format", "json",
+             "--patterns", str(ROOT / "skill" / "patterns" / "example-es.json")],
+            env=env, capture_output=True, text=True, timeout=60,
+        )
+        assert out3.returncode == 0, f"example patterns exited {out3.returncode}: {out3.stderr}"
+        json.loads(out3.stdout)
+        print("PASS  example pattern pack")
+
+        bad_patterns = tmp / "bad-patterns.json"
+        bad_patterns.write_text(json.dumps({"typo": ["no funciona"]}), encoding="utf-8")
+        out4 = subprocess.run(
+            [sys.executable, str(SCANNER), "--project", str(project),
+             "--days", "36500", "--format", "json", "--patterns", str(bad_patterns)],
+            env=env, capture_output=True, text=True, timeout=60,
+        )
+        assert out4.returncode != 0 and "unknown pattern class" in out4.stderr, (
+            "bad pattern pack was not rejected"
+        )
+        print("PASS  bad pattern pack rejected")
+
         print("\nAll smoke checks passed.")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
