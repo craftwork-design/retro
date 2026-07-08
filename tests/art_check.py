@@ -44,13 +44,16 @@ def main():
         for i, w in enumerate(widths):
             if w > MAX_WIDTH:
                 fails.append(f"art {idx} line {i}: width {w} > {MAX_WIDTH}: {lines[i]!r}")
-        # bordered art: first line is all box/dash border chars -> all lines equal
+        # bordered art: first line is all box/dash border chars. The full-width
+        # body rows must all match; narrower design rows (a cassette's tape
+        # notch) and the caption are allowed to be shorter.
         first = lines[0].strip()
         if first and all(ch in "-─═╔╗╚╝," for ch in first) and len(first) > 8:
-            content = [w for w in widths[:-1] if w > 0]  # last line often a caption
-            if len(set(content)) > 1:
+            maxw = max(widths)
+            body = [w for w in widths[:-1] if w >= maxw - 2]  # near-full rows only
+            if len(set(body)) > 1:
                 fails.append(
-                    f"art {idx}: bordered but line widths differ: {sorted(set(content))}")
+                    f"art {idx}: bordered but body widths differ: {sorted(set(body))}")
 
     print(f"checked {len(arts)} hero arts")
     if fails:

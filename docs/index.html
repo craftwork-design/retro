@@ -332,20 +332,19 @@ with quotes and dates attached. use both.</pre>
   { ms: 200, cap: "hourglass -> /retro -> CLAUDE.md", h:
     '█████████████████\n' +
     '█<span class="a0">▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓</span>█   <span class="dim"><- transcripts</span>\n' +
-    '▝█▓▓▓▓▓▓▓▓▓▓▓▓▓█▘\n' +
-    ' ▝█▒▒▒▒▒▒▒▒▒▒▒█▘\n' +
-    '  ▝█▒▒▒▒▒▒▒▒▒█▘\n' +
-    '   ▝█░░░░░░░█▘\n' +
-    '    ▝█░░░░░█▘\n' +
-    '     ▝█░░░█▘\n' +
-    '      ▝███▘       <span class="dim"><- /retro</span>\n' +
-    '      ▗███▖\n' +
-    '     ▗█░░░█▖\n' +
-    '    ▗█░<span class="a1">░</span>░█▖\n' +
-    '   ▗█░░░░░░░█▖\n' +
-    '  ▗█▒▒▒▒▒▒▒▒▒█▖\n' +
-    ' ▗█▒▒▒▒▒▒▒▒▒▒▒█▖\n' +
-    '▗█<span class="a3">▓▓▓▓▓▓▓▓▓▓▓▓▓</span>█▖\n' +
+    ' █▒▒▒▒▒▒▒▒▒▒▒▒▒█\n' +
+    '  █▒▒▒▒▒▒▒▒▒▒▒█\n' +
+    '   █░░░░░░░░░█\n' +
+    '    █░░░░░░░█\n' +
+    '     █░░░░░█\n' +
+    '      █░░░█\n' +
+    '       █<span class="a1">░</span>█         <span class="dim"><- /retro</span>\n' +
+    '      █░░░█\n' +
+    '     █░░░░░█\n' +
+    '    █░░░░░░░█\n' +
+    '   █▒▒▒▒▒▒▒▒▒█\n' +
+    '  █▒▒▒▒▒▒▒▒▒▒▒█\n' +
+    ' █<span class="a3">▓▓▓▓▓▓▓▓▓▓▓▓▓</span>█\n' +
     '█<span class="a2">▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓</span>█   <span class="dim"><- CLAUDE.md rules</span>\n' +
     '█████████████████',
     tick: function (el, f) {
@@ -374,48 +373,22 @@ with quotes and dates attached. use both.</pre>
       q(el, "a0").textContent = lit ? "░▓░" : "▓▓▓";
       q(el, "a1").textContent = lit ? "░▓░" : "▓▓▓";
     } },
-  // 4. cassette: the tape band scrolls between the two reels
-  { ms: 160, cap: "every session, on tape", h:
-    '╔═══════════════════╗\n' +
-    '║ ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄ ║\n' +
-    '║ █ RETRO · TAPE  █ ║\n' +
-    '║ ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀ ║\n' +
-    '║   ▟▀▙       ▟▀▙   ║\n' +
-    '║   █<span class="a0">O</span>█  <span class="a2">▒▒▒</span>  █<span class="a1">O</span>█   ║\n' +
-    '║   ▜▄▛       ▜▄▛   ║\n' +
-    '╚══╦═════════════╦══╝\n' +
-    '   ▀             ▀   \n' +
+  // 4. cassette: two round reels spin
+  { ms: 170, cap: "every session, on tape", h:
+    '╔════════════════════╗\n' +
+    '║  ┌──────────────┐  ║\n' +
+    '║  │ RETRO · TAPE │  ║\n' +
+    '║  └──────────────┘  ║\n' +
+    '║    .-.      .-.    ║\n' +
+    '║   ( <span class="a0">O</span> )    ( <span class="a1">O</span> )   ║\n' +
+    '║    \'-\'      \'-\'    ║\n' +
+    '╚═══╗            ╔═══╝\n' +
+    '    ╚════════════╝\n' +
     '  <span class="dim">every session, on tape</span>',
     tick: function (el, f) {
-      var hub = "O0oø";
+      var hub = "O0o0";
       q(el, "a0").textContent = hub[f % 4];
-      q(el, "a1").textContent = hub[f % 4];
-      var band = "░▒▓", s = "";
-      for (var i = 0; i < 3; i++) s += band[(i + f) % 3];
-      q(el, "a2").textContent = s;
-    } },
-  // 5. eye: the iris glint sweeps; it blinks now and then
-  { ms: 170, cap: "it reads every session", h:
-    '    ▄▄▄▄▄▄▄▄▄▄▄▄▄\n' +
-    ' ▄█▀▀░░░░░░░░░▀▀█▄\n' +
-    '<span class="a2">█▀░░░▄▄████▄▄░░░▀█</span>\n' +
-    '█░░░██<span class="a0">▓▒░░▒▓</span>██░░░█\n' +
-    '█░░░██▒░██░▒██░░░█\n' +
-    '█▄░░░▀▀████▀▀░░░▄█\n' +
-    ' ▀█▄▄░░░░░░░▄▄█▀\n' +
-    '    ▀▀▀▀▀▀▀▀▀▀▀\n' +
-    '  <span class="dim">it reads every session</span>',
-    tick: function (el, f) {
-      var blink = f % 22 < 1;
-      if (blink) {
-        q(el, "a2").textContent = "█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█";
-        q(el, "a0").textContent = "▀▀▀▀▀▀";
-      } else {
-        q(el, "a2").textContent = "█▀░░░▄▄████▄▄░░░▀█";
-        var g = "▓▒░░▒▓".split(""), k = f % 6;
-        g[k] = "█";
-        q(el, "a0").textContent = g.join("");
-      }
+      q(el, "a1").textContent = hub[(f + 2) % 4];
     } },
   // 6. NFO release header (width-locked at 38); ticking cursor
   { ms: 260, cap: "release", h:
