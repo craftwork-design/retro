@@ -25,6 +25,15 @@ Claude Code's built-in `/insights` gives you a great 30-day usage report with su
 
 Use both: `/insights` for the big picture, `/retro` for turning failures into rules.
 
+## What about netresearch/retro-skill?
+
+Fair question — [netresearch/retro-skill](https://github.com/netresearch/retro-skill) is a separate project with the same `/retro` command and the same core idea (mine transcripts, propose CLAUDE.md rules, approve each one). We built ours independently; the space clearly has legs if two teams landed on it at once. They're different tools for different users:
+
+- **Theirs is a framework** — ~37 signals across process hygiene (DCO sign-off, work-on-main, conventional commits, tool-call efficiency), routing to six destinations including PRs against skill repos and CI bootstrap. Depends on `jq`, `gh`/`glab`, `git`, an optional SQLite coach plugin, and installs via a plugin marketplace / Composer. Great if you run a team with strict git conventions.
+- **This is a script** — one stdlib Python file, zero dependencies, that you can read end to end. It focuses on the *human* friction: the corrections you type, the "you're right" the agent says back, the Esc-interrupts, the rules you dictate out loud — and it's bilingual (EN/RU) with pluggable language packs. Built for the individual developer's day-to-day.
+
+If you want an enterprise harness, use theirs. If you want a tiny, inspectable tool that catches what you keep re-typing, you're in the right place.
+
 ## Install
 
 ```bash
