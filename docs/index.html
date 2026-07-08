@@ -90,7 +90,7 @@
     color: #ffffff;
     padding: 0 0.75ch;
   }
-  #term { cursor: text; }
+  #term { cursor: text; white-space: pre; overflow-x: auto; }
   #tkb {
     position: absolute; opacity: 0; width: 1px; height: 1px;
     border: 0; padding: 0; pointer-events: none;
@@ -115,7 +115,8 @@
   }
   #doomwin pre.fire {
     color: #ff9500; line-height: 1; font-size: 10px;
-    margin: 0; padding: 2px 4px; user-select: none; overflow: hidden;
+    margin: 0; padding: 2px 4px; user-select: none;
+    white-space: pre; overflow: hidden;
   }
   #doomwin iframe {
     display: block; width: 100%; height: min(60vh, 420px);
@@ -303,221 +304,128 @@ with quotes and dates attached. use both.</pre>
     return el._q[c] || (el._q[c] = el.querySelector("." + c));
   }
   var ARTS = [
-  { ms: 200, h:
-    '╔═══════════════════╗\n' +
-    '╠═══════════════════╣   <span class="dim"><- your transcripts, 1.3 GB</span>\n' +
-    '╚╗<span class="x0">▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓</span>╔╝       <span class="dim">nobody ever reads them</span>\n' +
-    ' ╚╗<span class="x1">▒▒▒▒▒▒▒▒▒▒▒▒▒</span>╔╝\n' +
-    '  ╚╗<span class="x2">░░░░░░░░░░░</span>╔╝\n' +
-    '   ╚╗<span class="s0">▒▒▒▒▒▒▒</span>╔╝\n' +
-    '    ╚╗<span class="s1">░░░░░</span>╔╝\n' +
-    '     ╚╗<span class="d0">░</span>╔╝\n' +
-    '      ╚<span class="d1">░</span>╝           <span class="dim"><- /retro</span>\n' +
-    '      ╔<span class="d2">░</span>╗\n' +
-    '     ╔╝<span class="d3">░</span>╚╗\n' +
-    '    ╔╝<span class="u0"> ░ </span>╚╗\n' +
-    '   ╔╝<span class="u1">  ░  </span>╚╗\n' +
-    '  ╔╝<span class="b0">▒▒▒░▒▒▒</span>╚╗\n' +
-    ' ╔╝<span class="b1">▓▓▓▓▓▓▓▓▓</span>╚╗\n' +
-    '╔╝<span class="b2">█████████████</span>╚╗\n' +
-    '╠═══════════════════╣   <span class="dim"><- CLAUDE.md rules</span>\n' +
-    '╚═══════════════════╝',
+  // 1. chunky block RETRO wordmark with a scrolling shimmer band
+  { ms: 110, cap: "wordmark", h:
+    '█▀█ █▀▀ ▀█▀ █▀█ █▀█\n' +
+    '█▀▄ █▀▀  █  █▀▄ █ █\n' +
+    '▀ ▀ ▀▀▀  ▀  ▀ ▀ ▀▀▀\n' +
+    '<span class="a0">░▒▓█▓▒░░▒▓█▓▒░░▒▓█▓</span>\n' +
+    '   <span class="dim">transcripts → rules</span>',
     tick: function (el, f) {
-      // top chamber drains, sand streams through the neck, bottom fills
-      var lvl = f % 40;
-      var fills = ["▓▒░", "▒░ ", "░  "];
-      q(el, "x0").textContent = (lvl < 30 ? "▓" : "▒").repeat(15);
-      var neck = ["░", " "][f % 2];
-      ["d0", "d1", "d2", "d3"].forEach(function (c, i) {
-        q(el, c).textContent = (f + i) % 2 ? "░" : " ";
-      });
-      var g = lvl / 40;
-      q(el, "b0").textContent = "▒▒▒" + (f % 2 ? "░" : "▒") + "▒▒▒";
-      q(el, "b1").textContent = (g > 0.4 ? "▓" : "▒").repeat(9);
-      q(el, "b2").textContent = (g > 0.7 ? "█" : "▓").repeat(13);
+      var band = "░░▒▓█▓▒░", s = "";
+      for (var i = 0; i < 19; i++) s += band[(i + f) % band.length];
+      q(el, "a0").textContent = s;
     } },
-  { ms: 200, h:
-    '        ╔══════════╗\n' +
-    '   ╔═<span class="c0">═</span>══╣ FAILURES ╠══<span class="c1">═</span>═╗\n' +
-    '   ║    ╚══════════╝    ║\n' +
-    '   <span class="c7">║</span>                    <span class="c2">║</span>\n' +
-    '╔══╩════╗        ╔══════╩═══╗\n' +
-    '║ RULES ║        ║ CLUSTERS ║\n' +
-    '╚══╦════╝        ╚══════╦═══╝\n' +
-    '   <span class="c6">║</span>                    <span class="c3">║</span>\n' +
-    '   ║    ╔══════════╗    ║\n' +
-    '   ╚═<span class="c5">═</span>══╣ EVIDENCE ╠══<span class="c4">═</span>═╝\n' +
-    '        ╚══════════╝\n' +
-    '     <span class="dim">the loop, closed weekly</span>',
+  // 2. hourglass: sand drains top -> streams the neck -> fills the bottom
+  { ms: 180, cap: "hourglass -> /retro -> CLAUDE.md", h:
+    '█████████████████\n' +
+    '█<span class="a0">▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓</span>█   <span class="dim"><- transcripts</span>\n' +
+    ' █▒▒▒▒▒▒▒▒▒▒▒▒▒█\n' +
+    '  █▒▒▒▒▒▒▒▒▒▒▒█\n' +
+    '   █░░░░░░░░░█\n' +
+    '    █░░░░░░░█\n' +
+    '     █░░░░░█\n' +
+    '      █░░░█\n' +
+    '       █<span class="a1">░</span>█        <span class="dim"><- /retro</span>\n' +
+    '      █░░░█\n' +
+    '     █░░░░░█\n' +
+    '    █░░░░░░░█\n' +
+    '   █▒▒▒░▒▒▒█\n' +
+    '  █▒▒▒▒▒▒▒▒▒█\n' +
+    ' █<span class="a2">▓▓▓▓▓▓▓▓▓▓▓</span>█\n' +
+    '█<span class="a3">▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓</span>█   <span class="dim"><- CLAUDE.md rules</span>\n' +
+    '█████████████████',
     tick: function (el, f) {
-      var o = { c0: "═", c1: "═", c2: "║", c3: "║", c4: "═", c5: "═", c6: "║", c7: "║" };
-      for (var i = 0; i < 8; i++)
-        q(el, "c" + i).textContent = f % 8 === i ? "●" : o["c" + i];
+      var g = (f % 44) / 44;
+      q(el, "a0").textContent = (g < 0.5 ? "▓" : (g < 0.8 ? "▒" : "░")).repeat(15);
+      q(el, "a1").textContent = f % 2 ? "░" : " ";
+      q(el, "a2").textContent = (g > 0.4 ? "▓" : "▒").repeat(11);
+      q(el, "a3").textContent = (g > 0.7 ? "█" : "▓").repeat(15);
     } },
-  { ms: 240, h:
-    '▄████████████████████████████████▄\n' +
-    '██ ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄ ██\n' +
-    '██ █ SESSIONS · SIDE A · 45d  █ ██\n' +
-    '██ ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀ ██\n' +
-    '██   ▄████▄ ▒▒▒▒▒▒▒▒▒▒ ▄████▄   ██\n' +
-    '██   ██<span class="x0">││</span>██ ▒▒▒▒▒▒▒▒▒▒ ██<span class="x1">││</span>██   ██\n' +
-    '██   ▀████▀ ▒▒▒▒▒▒▒▒▒▒ ▀████▀   ██\n' +
-    '██  REC <span class="x2">●</span>   <span class="x3">00:42:07</span>   1.3 GB   ██\n' +
-    '▀████████████████████████████████▀\n' +
-    '   <span class="dim">every session, still on tape</span>',
-    tick: function (el, f) {
-      var SP = ["││", "╱╱", "──", "╲╲"];
-      q(el, "x0").textContent = SP[f % 4];
-      q(el, "x1").textContent = SP[(f + 2) % 4];
-      q(el, "x2").textContent = f % 4 < 2 ? "●" : "○";
-      var t = 2527 + Math.floor(f / 4);
-      var m = Math.floor(t / 60), s = t % 60;
-      q(el, "x3").textContent = "00:" + ("0" + m).slice(-2) + ":" + ("0" + s).slice(-2);
-    } },
-  { ms: 300, h:
-    '▄████████████████████████▄\n' +
-    '██ ┌──────────────────┐ ██\n' +
-    '██ │TRANSCRIPTS · 1.3G│ ██\n' +
-    '██ └──────────────────┘ ██\n' +
-    '██                      ██\n' +
-    '██       ▄██████▄       ██\n' +
-    '██      ███<span class="x0"> ── </span>███      ██\n' +
-    '██       ▀██████▀       ██\n' +
-    '██          <span class="x1">●</span>           ██\n' +
-    '██        ░░░░░░        ██\n' +
-    '▀████████████████████████▀\n' +
-    '  <span class="dim">insert disk 42 of 1,847</span>',
-    tick: function (el, f) {
-      q(el, "x0").textContent = [" ── ", " ╲╲ ", " ││ ", " ╱╱ "][f % 4];
-      q(el, "x1").textContent = f % 6 < 3 ? "●" : "○";
-    } },
-  { ms: 150, h:
-    '<span class="dim">in:  </span><span class="x0"></span>\n' +
-    '                   ▼▼▼\n' +
-    '▄██████████████████████████████████████████▄\n' +
-    '██ ▒▒▒▒▒▒▒▒▒▒▒ ►► /retro <span class="x2">◐</span> ►► ▒▒▒▒▒▒▒▒▒▒▒ ██\n' +
-    '▀██████████████████████████████████████████▀\n' +
-    '  <span class="x3">●○●○●○●○●○●○●○●○●○●○●○●○●○●○●○●○●○●○●○●○</span>\n' +
-    '<span class="dim">out: </span><span class="x1"></span>\n' +
-    '     <span class="dim">the belt never stops</span>',
-    tick: function (el, f) {
-      var SRC = '✗ "no" · ✗ "не так" · ✗ esc · ✗ "still broken" · ✗ "короче" · ';
-      q(el, "x0").textContent = (SRC + SRC).substr(f % SRC.length, 40);
-      var R = ["+ rule: tests via pnpm vitest run",
-               "+ rule: reply in russian, briefly",
-               "+ rule: never touch /secrets",
-               "+ rule: one dev server is enough"];
-      var r = R[Math.floor(f / 44) % 4], ph = (f % 44) * 2;
-      q(el, "x1").textContent = pad(r.slice(0, ph), 40);
-      q(el, "x2").textContent = ["◐", "◓", "◑", "◒"][f % 4];
-      var roll = f % 2 ? "●○" : "○●";
-      q(el, "x3").textContent = roll.repeat(20);
-    } },
-  { ms: 260, h:
-    '     ▄▄▄▄▄▄▄▄▄▄▄▄▄▄\n' +
-    '  ▄██████████████████▄\n' +
-    ' ██████████████████████\n' +
-    ' ███<span class="x0">▒▒▒▒▒</span>██████<span class="x1">▒▒▒▒▒</span>███\n' +
-    ' ████<span class="x2">▒▒▒</span>████████<span class="x3">▒▒▒</span>████\n' +
-    ' ██████████▄▄██████████\n' +
-    ' ▀████████████████████▀\n' +
-    '   <span class="x4">█▄█▄█▄█▄█▄█▄█▄█▄█▄</span>\n' +
-    '     ▀▀▀▀▀▀▀▀▀▀▀▀▀▀\n' +
+  // 3. skull: eye sockets glint every few seconds
+  { ms: 200, cap: "nothing is ever deleted", h:
+    '    ▄████████████▄\n' +
+    '   ███▓▒░░░░░░▒▓███\n' +
+    '  ███▀        ▀███\n' +
+    ' ███  <span class="a0">▓▓▓</span>  <span class="a1">▓▓▓</span>  ███\n' +
+    ' ███  ███  ███  ███\n' +
+    ' ███  ▀▀▀  ▀▀▀  ███\n' +
+    '  ███▄   ▀▀   ▄███\n' +
+    '   ███▄▄████▄▄███\n' +
+    '    ▀██▄▄▄▄▄▄██▀\n' +
+    '     █▐█▌█▐█▌█▐█\n' +
+    '     ▀▀▀▀▀▀▀▀▀▀▀\n' +
     '  <span class="dim">nothing is ever deleted</span>',
     tick: function (el, f) {
-      var g = "░▒▓█▓▒"[f % 6];
-      q(el, "x0").textContent = g.repeat(5);
-      q(el, "x1").textContent = g.repeat(5);
-      q(el, "x2").textContent = g.repeat(3);
-      q(el, "x3").textContent = g.repeat(3);
-      q(el, "x4").textContent = Math.floor(f / 5) % 2
-        ? "█▄█▄█▄█▄█▄█▄█▄█▄█▄" : "▄█▄█▄█▄█▄█▄█▄█▄█▄█";
+      var lit = f % 16 < 1;
+      q(el, "a0").textContent = lit ? "░▓░" : "▓▓▓";
+      q(el, "a1").textContent = lit ? "░▓░" : "▓▓▓";
     } },
-  { ms: 200, h:
-    '▄██████████████████████████████▄\n' +
-    '██┌──────────────────────────┐██\n' +
-    '██│<span class="x0"> C:\\RETRO> replay #042    </span>│██\n' +
-    '██│<span class="x1"> you:   "не так, короче"  </span>│██\n' +
-    '██│<span class="x2"> agent: "ты прав, виноват"</span>│██\n' +
-    '██│<span class="x3"> rule → CLAUDE.md  ✓      </span>│██\n' +
-    '██│<span class="x4"> █                        </span>│██\n' +
-    '██└──────────────────────────┘██\n' +
-    '▀██████████████████████████████▀\n' +
-    '             ▄████▄\n' +
-    '        ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀\n' +
-    '  <span class="dim">the machine remembers everything</span>',
+  // 4. cassette: the tape band scrolls between the two reels
+  { ms: 150, cap: "every session, on tape", h:
+    ' ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄\n' +
+    '▐██████████████████▌\n' +
+    '▐█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█▌\n' +
+    '▐█░░  RETRO  TAPE ░█▌\n' +
+    '▐█░ ▟█▙ <span class="a0">░░▒▒░░</span> ▟█▙ █▌\n' +
+    '▐█░ ▜█▛ <span class="a1">░░▒▒░░</span> ▜█▛ █▌\n' +
+    '▐█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█▌\n' +
+    '▐██▄▄▄▄▄▄▄▄▄▄▄▄▄▄██▌\n' +
+    ' ▀██▀        ▀██▀\n' +
+    '  <span class="dim">every session, on tape</span>',
     tick: function (el, f) {
-      var L = [" C:\\RETRO> replay #042", ' you:   "не так, короче"',
-               ' agent: "ты прав, виноват"', " rule → CLAUDE.md  ✓"];
-      var s = f % 22;
-      for (var i = 0; i < 4; i++)
-        q(el, "x" + i).textContent = s === i * 2 ? "▒".repeat(26) : pad(L[i], 26);
-      q(el, "x4").textContent = s === 8 ? "▒".repeat(26) : pad(f % 2 ? " █" : "", 26);
+      var band = "░░▒▒▓▓", s = "";
+      for (var i = 0; i < 6; i++) s += band[(i + f) % band.length];
+      q(el, "a0").textContent = s;
+      q(el, "a1").textContent = s;
     } },
-  { ms: 120, h:
-    '╔══════════════════════════════════════════════╗\n' +
-    '║ FRICTION MONITOR · 45d            <span class="x2">♥</span> <span class="x3">221</span> ║\n' +
-    '║ ────────────────────────────────────────────  ║\n' +
-    '║ <span class="x0"></span> ║\n' +
-    '║ <span class="x1"></span> ║\n' +
-    '╚══════════════════════════════════════════════╝\n' +
-    '   <span class="dim">every spike is you correcting the agent</span>',
+  // 5. eye: the iris glint sweeps; it blinks now and then
+  { ms: 170, cap: "it reads every session", h:
+    '    ▄▄▄▄▄▄▄▄▄▄▄▄▄\n' +
+    ' ▄█▀▀░░░░░░░░░▀▀█▄\n' +
+    '<span class="a2">█▀░░░▄▄████▄▄░░░▀█</span>\n' +
+    '█░░░██<span class="a0">▓▒░░▒▓</span>██░░░█\n' +
+    '█░░░██▒░██░▒██░░░█\n' +
+    '█▄░░░▀▀████▀▀░░░▄█\n' +
+    ' ▀█▄▄░░░░░░░▄▄█▀\n' +
+    '    ▀▀▀▀▀▀▀▀▀▀▀\n' +
+    '  <span class="dim">it reads every session</span>',
     tick: function (el, f) {
-      var W = "───▁▂▁────▄──▁───█▁──▂──────▃──▁▁───▂───█▂▁────▅──▁──";
-      q(el, "x0").textContent = (W + W).substr(f % W.length, 44);
-      q(el, "x1").textContent = (W + W).substr((f + 27) % W.length, 44);
-      q(el, "x2").textContent = f % 4 < 2 ? "♥" : " ";
-      q(el, "x3").textContent = String(219 + (f % 5));
-    } },
-  { ms: 90, h:
-    '┌─ CORRECTIONS / WEEK ────────────────┐\n' +
-    '│                                     │\n' +
-    '│ w25 <span class="x0"></span> │\n' +
-    '│ w26 <span class="x1"></span> │\n' +
-    '│ ▶── /retro installed ─────────────◀ │\n' +
-    '│ w27 <span class="x2"></span> │\n' +
-    '│ w28 <span class="x3"></span> │\n' +
-    '│                                     │\n' +
-    '└─────────────────────────────────────┘\n' +
-    '   <span class="dim">the only chart that should go down</span>',
-    tick: function (el, f) {
-      var B = [[24, "47"], [16, "31"], [7, "12"], [2, "4"]];
-      var g = Math.min(f % 70, 16) / 16;
-      for (var i = 0; i < 4; i++) {
-        var n = Math.round(B[i][0] * g);
-        q(el, "x" + i).textContent =
-          pad("█".repeat(n) + "░".repeat(B[i][0] - n) +
-              (n >= B[i][0] ? " " + B[i][1] : ""), 31);
+      var blink = f % 22 < 1;
+      if (blink) {
+        q(el, "a2").textContent = "█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█";
+        q(el, "a0").textContent = "▀▀▀▀▀▀";
+      } else {
+        q(el, "a2").textContent = "█▀░░░▄▄████▄▄░░░▀█";
+        var g = "▓▒░░▒▓".split(""), k = f % 6;
+        g[k] = "█";
+        q(el, "a0").textContent = g.join("");
       }
     } },
-  { ms: 110, h:
-    '╔═══════════════════════════════════╗\n' +
-    '║ ▓▓▓▓▓▓▓▓▓▓▓▓ CLAUDE.md ▓▓▓▓▓▓▓▓▓▓ ║\n' +
-    '╠═══════════════════════════════════╣\n' +
-    '║ + dev server is already running   ║\n' +
-    '║ + tests: pnpm vitest run          ║\n' +
-    '║ <span class="x0">                                 </span> ║\n' +
-    '║                                   ║\n' +
-    '╚═══════════════════════════════════╝\n' +
-    '  <span class="dim">it writes itself. from your failures.</span>',
+  // 6. NFO release header (width-locked at 38); ticking cursor
+  { ms: 260, cap: "release", h:
+    ',------------------------------------.\n' +
+    '| ·°· R E T R O · release 007 ·°·    |\n' +
+    ':·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-·-:\n' +
+    '| supplier: agent    cracker: claude |\n' +
+    '| mined transcripts -> CLAUDE.md<span class="a0"> </span>    |\n' +
+    '`--------------[ //cw ]--------------\'',
     tick: function (el, f) {
-      var R = ["+ reply in russian, briefly", "+ commit only your own changes",
-               "+ never start a second server", "+ no em-dashes. ever."];
-      var r = R[Math.floor(f / 60) % 4], ph = f % 60;
-      var sh = r.slice(0, Math.min(r.length, ph));
-      var cur = sh.length < r.length ? "█" : (f % 8 < 4 ? "█" : " ");
-      q(el, "x0").textContent = pad(sh + cur, 33);
+      q(el, "a0").textContent = f % 2 ? "█" : " ";
     } },
   ];
   var art = ARTS[(Math.random() * ARTS.length) | 0];
   hero.innerHTML = art.h;
   var artStarted = false;
   function startArt() {
-    if (REDUCED || artStarted) return;
+    if (artStarted) return;
     artStarted = true;
+    if (REDUCED) { art.tick(hero, 0); return; }  // fill once, no loop
     var f = 0;
+    art.tick(hero, 0);
     setInterval(function () { art.tick(hero, f++); }, art.ms);
   }
+  startArt();  // animate the hero immediately; it is excluded from the typewriter
 
   // ---------- the live terminal ----------
   var tout = document.getElementById("tout");
@@ -572,7 +480,7 @@ with quotes and dates attached. use both.</pre>
 
   function eliza(cmd) {
     var c = cmd.toLowerCase();
-    if (/привет|hello|hi\b|хай/.test(c)) return "hello, human. i read your transcripts. all of them.";
+    if (/hello|hi\b|hey|yo\b/.test(c)) return "hello, human. i read your transcripts. all of them.";
     if (/claude|agent|gpt|ai/.test(c)) return 'the agent is listening. it says: "you\'re right."';
     if (/\?$/.test(c)) return ORACLE[(Math.random() * ORACLE.length) | 0];
     return UNKNOWN[unkI++ % UNKNOWN.length];
@@ -606,7 +514,7 @@ with quotes and dates attached. use both.</pre>
       if (/doom/.test(arg)) return openDoom("doom.wad");
       if (/secret/.test(arg)) return out("cat: .secrets: permission denied. nice try.");
       if (/corrections/.test(arg)) return out(
-        '221 lines. highlights:\n  "не так" ×34\n  "no, not like that" ×28\n  "..." (just esc) ×40');
+        '221 lines. highlights:\n  "no, not like that" ×34\n  "that is not what i asked" ×28\n  "..." (just esc) ×40');
       if (/rules/.test(arg)) return out("+ never type the same correction twice.");
       return out("cat: " + (arg || "?") + ": no such file");
     }
@@ -819,17 +727,19 @@ with quotes and dates attached. use both.</pre>
     }, 6000);
   }
 
-  if (REDUCED) { startArt(); return; }
+  if (REDUCED) return;  // art already filled by startArt() above
 
   // typewriter: collect every text node in order, clear, then retype fast.
   // the tail of the typed region briefly shows wrong glyphs — a glitch
-  // artifact, not a headline effect.
+  // artifact, not a headline effect. the hero art is excluded so the
+  // typewriter can't fight the art animation over the same spans.
   var walker = document.createTreeWalker(
     document.getElementById("page"), NodeFilter.SHOW_TEXT, null
   );
   var nodes = [], full = [], total = 0, n;
   while ((n = walker.nextNode())) {
     if (!n.nodeValue) continue;
+    if (hero.contains(n)) continue;  // hero animates on its own
     nodes.push(n);
     full.push(n.nodeValue);
     total += n.nodeValue.length;
