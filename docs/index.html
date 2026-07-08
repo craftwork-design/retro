@@ -5,25 +5,32 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>retro — never type the same correction twice</title>
 <meta name="description" content="A free Claude Code skill that mines your local session transcripts for recurring failures and turns them into evidence-backed CLAUDE.md rules. Local-only, zero dependencies.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="retro — never type the same correction twice">
+<meta property="og:description" content="A free Claude Code skill that mines your local transcripts for recurring failures and turns them into evidence-backed CLAUDE.md rules. Local-only, zero dependencies.">
+<meta property="og:url" content="https://retro.craftwork.design">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="retro — never type the same correction twice">
+<meta name="twitter:description" content="Mines your Claude Code transcripts for recurring failures, turns them into CLAUDE.md rules. Local-only, zero dependencies.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23000'/%3E%3Ctext x='3' y='12' font-family='monospace' font-size='11' fill='%23fff'%3Er%3C/text%3E%3C/svg%3E">
 <style>
   :root {
     --bg: #ffffff;
     --fg: #000000;
-    --dim: rgba(0, 0, 0, 0.44);
+    --dim: rgba(0, 0, 0, 0.56);
     --faint: rgba(0, 0, 0, 0.16);
   }
   :root[data-theme="dark"] {
     --bg: #000000;
     --fg: #ffffff;
-    --dim: rgba(255, 255, 255, 0.48);
+    --dim: rgba(255, 255, 255, 0.62);
     --faint: rgba(255, 255, 255, 0.18);
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme]) {
       --bg: #000000;
       --fg: #ffffff;
-      --dim: rgba(255, 255, 255, 0.48);
+      --dim: rgba(255, 255, 255, 0.62);
       --faint: rgba(255, 255, 255, 0.18);
     }
   }
@@ -225,6 +232,7 @@ with quotes and dates attached. use both.</pre>
     <pre class="block" id="term"><span class="dim"># the prompt below is live. try: help, ls, doom
 </span><span id="tout"></span><span>guest@retro:~$ </span><span id="tin"></span><span class="caret" aria-hidden="true"></span></pre>
     <input id="tkb" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="terminal input">
+    <pre class="block dim" style="font-size:12px">Independent open-source project. Not affiliated with, endorsed, or sponsored by Anthropic or id Software. Claude and Claude Code are trademarks of Anthropic; DOOM is a trademark of id Software LLC. DOOM shareware is streamed via the Internet Archive.</pre>
   </footer>
 </main>
 
@@ -317,30 +325,31 @@ with quotes and dates attached. use both.</pre>
       q(el, "a0").textContent = s;
     } },
   // 2. hourglass: sand drains top -> streams the neck -> fills the bottom
-  { ms: 180, cap: "hourglass -> /retro -> CLAUDE.md", h:
+  { ms: 200, cap: "hourglass -> /retro -> CLAUDE.md", h:
     '█████████████████\n' +
     '█<span class="a0">▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓</span>█   <span class="dim"><- transcripts</span>\n' +
-    ' █▒▒▒▒▒▒▒▒▒▒▒▒▒█\n' +
-    '  █▒▒▒▒▒▒▒▒▒▒▒█\n' +
-    '   █░░░░░░░░░█\n' +
-    '    █░░░░░░░█\n' +
-    '     █░░░░░█\n' +
-    '      █░░░█\n' +
-    '       █<span class="a1">░</span>█        <span class="dim"><- /retro</span>\n' +
-    '      █░░░█\n' +
-    '     █░░░░░█\n' +
-    '    █░░░░░░░█\n' +
-    '   █▒▒▒░▒▒▒█\n' +
-    '  █▒▒▒▒▒▒▒▒▒█\n' +
-    ' █<span class="a2">▓▓▓▓▓▓▓▓▓▓▓</span>█\n' +
-    '█<span class="a3">▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓</span>█   <span class="dim"><- CLAUDE.md rules</span>\n' +
+    '▝█▓▓▓▓▓▓▓▓▓▓▓▓▓█▘\n' +
+    ' ▝█▒▒▒▒▒▒▒▒▒▒▒█▘\n' +
+    '  ▝█▒▒▒▒▒▒▒▒▒█▘\n' +
+    '   ▝█░░░░░░░█▘\n' +
+    '    ▝█░░░░░█▘\n' +
+    '     ▝█░░░█▘\n' +
+    '      ▝███▘       <span class="dim"><- /retro</span>\n' +
+    '      ▗███▖\n' +
+    '     ▗█░░░█▖\n' +
+    '    ▗█░<span class="a1">░</span>░█▖\n' +
+    '   ▗█░░░░░░░█▖\n' +
+    '  ▗█▒▒▒▒▒▒▒▒▒█▖\n' +
+    ' ▗█▒▒▒▒▒▒▒▒▒▒▒█▖\n' +
+    '▗█<span class="a3">▓▓▓▓▓▓▓▓▓▓▓▓▓</span>█▖\n' +
+    '█<span class="a2">▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓</span>█   <span class="dim"><- CLAUDE.md rules</span>\n' +
     '█████████████████',
     tick: function (el, f) {
-      var g = (f % 44) / 44;
-      q(el, "a0").textContent = (g < 0.5 ? "▓" : (g < 0.8 ? "▒" : "░")).repeat(15);
-      q(el, "a1").textContent = f % 2 ? "░" : " ";
-      q(el, "a2").textContent = (g > 0.4 ? "▓" : "▒").repeat(11);
-      q(el, "a3").textContent = (g > 0.7 ? "█" : "▓").repeat(15);
+      var g = (f % 40) / 40;
+      q(el, "a0").textContent = (g < 0.55 ? "▓" : "▒").repeat(15);   // top drains
+      q(el, "a1").textContent = f % 2 ? "▒" : "░";                   // sand in neck
+      q(el, "a3").textContent = (g > 0.5 ? "▓" : "▒").repeat(13);    // bottom fills
+      q(el, "a2").textContent = (g > 0.75 ? "█" : "▓").repeat(15);
     } },
   // 3. skull: eye sockets glint every few seconds
   { ms: 200, cap: "nothing is ever deleted", h:
@@ -643,7 +652,8 @@ with quotes and dates attached. use both.</pre>
         '<button id="doomx">[x]</button></div>' +
         '<pre class="fire"></pre>' +
         '<iframe title="DOOM" allow="fullscreen; autoplay"></iframe>' +
-        '<div class="hint">esc closes · click inside for sound · knee-deep in the dead</div></div>';
+        '<div class="hint">esc closes · click inside for sound · ' +
+        '<a href="https://archive.org/details/DoomsharewareEpisode" target="_blank" rel="noopener" style="color:#ff9500">open on archive.org</a> if it won\'t load</div></div>';
       document.body.appendChild(doomEl);
       doomEl.querySelector("#doomx").addEventListener("click", closeDoom);
       doomEl.addEventListener("click", function (e) { if (e.target === doomEl) closeDoom(); });

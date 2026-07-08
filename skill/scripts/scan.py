@@ -147,9 +147,13 @@ PATTERN_CLASSES = {
 
 def load_patterns(path):
     data = json.loads(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError("patterns file must be a JSON object of {class: [regex, ...]}")
     for cls, pats in data.items():
         if cls in PATTERN_CLASSES and isinstance(pats, list):
-            PATTERN_CLASSES[cls].extend(re.compile(p, re.I | re.U) for p in pats)
+            PATTERN_CLASSES[cls].extend(
+                re.compile(p, re.I | re.U) for p in pats if isinstance(p, str)
+            )
 
 
 DENIAL_MARKERS = [
@@ -937,11 +941,18 @@ def main():
             x for x in projects_root.iterdir()
             if x.is_dir() and x.name != d.name and x.name.startswith(d.name + "-")
         ]
-        label = d.name.rsplit("-", 1)[-1] or d.name
+        label = Path(args.project).name  # placeholder; refined from cwd below
 
     files = session_files(dirs, args.days, args.limit)
     sessions = [s for f in files if (s := parse_session(f, args.max_excerpt))]
     sessions = [s for s in sessions if s["user_msgs"] > 0 or s["tool_calls"] > 0]
+
+    if not args.all:
+        # the munged dir name can't be reliably un-munged (hyphens are
+        # ambiguous), so take the real basename from a session's recorded cwd
+        cwd = next((s["cwd"] for s in sessions if s.get("cwd")), None)
+        if cwd:
+            label = Path(cwd).name or label
 
     report = aggregate(sessions, args.days, label)
     report["truncated"] = len(files) >= args.limit

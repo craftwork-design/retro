@@ -32,7 +32,8 @@ changes second.
 
 ## Step 1 — collect signals
 
-Locate the scanner, in order: `~/.claude/skills/retro/scripts/scan.py`; if
+Locate the scanner, in order: `${CLAUDE_PLUGIN_ROOT}/scripts/scan.py` (set
+when installed as a plugin); `~/.claude/skills/retro/scripts/scan.py`; if
 `$CLAUDE_CONFIG_DIR` is set, `$CLAUDE_CONFIG_DIR/skills/retro/scripts/scan.py`;
 then `.claude/skills/retro/scripts/scan.py` in the project. Then run it with
 an explicit absolute project path (do not rely on the shell's cwd):
@@ -47,9 +48,17 @@ Sanity-check the output before proceeding:
 - `project` and `sessions_scanned` look right for this project.
 - If the scanner exits with "no transcripts", say so and stop; offer
   `/retro all`.
-- If `truncated` is true, the window was capped by `--limit` (default 200
-  sessions): rerun with `--limit 1000`, or state the real coverage in the
-  report header instead of "last N days".
+- If `sessions_scanned` is 0, or it is small and every `totals` value is 0,
+  do NOT write a full retro. Tell the user plainly there is not enough
+  history here yet, suggest `/retro all` and `/retro 90d`, and stop. A
+  hollow zeros-report reads as "broken".
+- With fewer than ~3 sessions, don't hunt cross-session patterns (every
+  cluster field is empty by construction). Do a single-session post-mortem:
+  the one place the agent claimed done-but-wasn't, at most one earned rule,
+  and say explicitly this is not a trend.
+- If `truncated` is true OR `sessions_scanned` equals `--limit`, the window
+  was capped: rerun with `--limit 1000` before doing anything else, or state
+  the real coverage in the report header instead of "last N days".
 - Sessions are selected by file modification time; individual quotes carry
   their own `ts` and may predate the window. Check the `ts` of every quote
   you cite; present older evidence as such, never as recent.
@@ -75,6 +84,12 @@ Compare `git log -1 --format=%cI -- CLAUDE.md` (or the file mtime) and, if
 you can, `git blame` the specific line against the `ts` of the evidence
 quotes. If you cannot establish the order, say so in the report rather than
 asserting the rule was ignored.
+
+Note: design-heavy projects often keep CLAUDE.md gitignored. If
+`git ls-files --error-unmatch CLAUDE.md` fails, the file is untracked and
+`git blame` is unavailable — individual rule ages are unknown. Use
+whole-file mtime plus content match only as weak evidence, and never claim a
+rule was "ignored" on that basis alone.
 
 If no project CLAUDE.md exists, the Step 4 diff becomes a proposed new file:
 say "create `<project>/CLAUDE.md`" and show its full contents. Rules that
@@ -113,6 +128,13 @@ Start with the highest-yield fields:
 - `nudges` — only per-session counts: filter `sessions[]` for `nudges >= 2`
   (= the agent stalls mid-task). For quotes, grep those transcripts;
   otherwise cite session titles and dates from `sessions[]`.
+
+On design, creative, or writing projects, `redo` and bare comparatives
+("shorter", "покороче", "мельче", "переделай хедер") are usually the WORK,
+not agent failure — that is just what iteration sounds like. Require an
+`after_success_claim`, `frustration`, `failure_report`, or `post_interrupt`
+co-tag before counting a `redo`- or `correction`-only entry as a pattern, or
+you will over-report friction on creative repos.
 
 To form candidates from the flat `corrections` list: group by recurring
 nouns/verbs in `text` and by session overlap with other signals; a candidate

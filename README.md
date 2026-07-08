@@ -19,7 +19,7 @@ This is the Replit-style self-improvement loop (production failures → clusters
 Claude Code's built-in `/insights` gives you a great 30-day usage report with suggestions. retro is a different tool for a different job:
 
 - **Evidence, not summaries.** Every proposed rule comes with verbatim quotes from your transcripts, dated. You see exactly which failures a rule would have prevented, and can veto it.
-- **Signals /insights doesn't mine.** The agent admitting "you're right" (69 times in my last 45 days), instructions you repeat across sessions (found one I had typed in 8 different sessions), rules you dictated out loud ("запомни, отныне..."), Esc-interrupts and what you said right after.
+- **Signals /insights doesn't mine.** The agent admitting "you're right" (69 times in my last 45 days), rules you dictated out loud ("запомни, отныне..."), Esc-interrupts and what you said right after.
 - **Closes the loop.** retro doesn't stop at suggestions: it drafts the CLAUDE.md diff, you confirm, it applies.
 - **Inspectable and hackable.** One stdlib Python file, deterministic, bilingual (EN/RU) with pluggable language packs, custom windows (`7d`/`90d`/`all`), JSON output you can pipe anywhere.
 
@@ -40,6 +40,8 @@ TMP=$(mktemp -d) && git clone https://github.com/craftwork-design/retro.git "$TM
 ```
 
 Requires Python 3.8+ (stdlib only, no dependencies). On Windows, use Git Bash for the commands above and `python` instead of `python3`. If you use a custom `CLAUDE_CONFIG_DIR`, both the installer and the scanner respect it.
+
+**Claude Code only.** retro reads `~/.claude/projects/` transcripts. Cursor, Codex, and Zed are on the roadmap, not supported today. New to retro or a fresh machine? Start with `/retro all` — a brand-new project has almost no history, so the single-project view will look empty until you've used it a while.
 
 ## Use
 
@@ -111,7 +113,7 @@ See [examples/report-example.md](examples/report-example.md) for a full report.
 
 ## Privacy
 
-Everything runs on your machine. The scanner is a single stdlib Python file you can read end to end. No network calls, no telemetry, nothing leaves your laptop. Your transcripts are yours.
+Everything runs on your machine. The scanner is a single stdlib Python file with no dependencies. No network calls, no telemetry, nothing leaves your laptop. Your transcripts are yours.
 
 ## Roadmap
 
@@ -123,3 +125,7 @@ Everything runs on your machine. The scanner is a single stdlib Python file you 
 ## License
 
 MIT
+
+---
+
+Independent open-source project. Not affiliated with, endorsed, or sponsored by Anthropic or id Software. Claude and Claude Code are trademarks of Anthropic; DOOM is a trademark of id Software LLC.
