@@ -85,6 +85,30 @@
     text-underline-offset: 3px;
   }
   #theme:hover { background: var(--fg); color: var(--bg); text-decoration: none; }
+  .head-right { display: inline-flex; gap: 1.25ch; align-items: baseline; white-space: nowrap; }
+  #ghlink {
+    color: var(--dim); text-decoration: underline; text-underline-offset: 3px;
+  }
+  #ghlink:hover { background: var(--fg); color: var(--bg); text-decoration: none; }
+  #starpop {
+    position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 70;
+    width: max-content; max-width: min(92vw, 320px);
+    background: var(--bg); color: var(--fg);
+    border: 2px solid var(--fg); padding: 0.85rem 1rem;
+    font-size: 13px; line-height: 1.6;
+    transform: translateY(140%); transition: transform .5s cubic-bezier(.2,.8,.2,1);
+  }
+  #starpop.show { transform: translateY(0); }
+  #starpop .sp-top { display: flex; justify-content: space-between; align-items: baseline; gap: 1ch; }
+  #starpop .sp-x { background: none; border: 0; color: var(--dim); font: inherit; cursor: pointer; }
+  #starpop .sp-x:hover { color: var(--fg); }
+  #starpop a.sp-star {
+    display: inline-block; margin-top: 0.6rem;
+    background: var(--fg); color: var(--bg); padding: 0.15rem 0.9ch;
+    text-decoration: none;
+  }
+  #starpop a.sp-star:hover { background: #0000aa; color: #fff; }
+  @media (prefers-reduced-motion: reduce) { #starpop { transition: none; } }
   .cmd { cursor: pointer; }
   .cmd:hover { background: var(--fg); color: var(--bg); }
   .cmd:hover .dim { color: var(--bg); }
@@ -150,7 +174,10 @@
 <main id="page">
   <div class="head block">
     <pre><h1>retro</h1><span class="dim"> · a weekly retro for your coding agent</span></pre>
-    <button id="theme" aria-label="toggle theme">[☾]</button>
+    <span class="head-right">
+      <a id="ghlink" href="https://github.com/craftwork-design/retro" target="_blank" rel="noopener">★ <span id="stars">github</span></a>
+      <button id="theme" aria-label="toggle theme">[☾]</button>
+    </span>
   </div>
 
   <pre class="block art" id="hero" aria-hidden="true"></pre>
@@ -240,6 +267,15 @@ with quotes and dates attached. use both.</pre>
   </footer>
 </main>
 
+<div id="starpop" hidden>
+  <div class="sp-top">
+    <span>★ retro is free &amp; open source.</span>
+    <button class="sp-x" id="sp-x" aria-label="dismiss">[x]</button>
+  </div>
+  <div class="dim">a star is how people find it.</div>
+  <a class="sp-star" id="sp-star" href="https://github.com/craftwork-design/retro" target="_blank" rel="noopener">[ star it on GitHub ]</a>
+</div>
+
 <script>
 (function () {
   // theme
@@ -267,6 +303,47 @@ with quotes and dates attached. use both.</pre>
 
   var GLYPHS = "▓▒░#%&@*+=<>/\\_";
   var REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // ---------- GitHub star count (cached 1h) + star popup ----------
+  var REPO = "craftwork-design/retro";
+  var starsEl = document.getElementById("stars");
+  function setStars(n) {
+    if (typeof n === "number" && n >= 0) starsEl.textContent = String(n);
+  }
+  (function loadStars() {
+    try {
+      var c = JSON.parse(localStorage.getItem("retro-stars") || "null");
+      if (c && Date.now() - c.t < 3600000) { setStars(c.n); return; }
+    } catch (e) {}
+    fetch("https://api.github.com/repos/" + REPO)
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (d && typeof d.stargazers_count === "number") {
+          setStars(d.stargazers_count);
+          try { localStorage.setItem("retro-stars", JSON.stringify({ n: d.stargazers_count, t: Date.now() })); } catch (e) {}
+        }
+      })
+      .catch(function () { /* private repo / offline / rate limit → keeps "github" */ });
+  })();
+
+  // star popup: shows once after ~25s, unless already starred/dismissed
+  (function starPopup() {
+    var pop = document.getElementById("starpop");
+    var seen = false;
+    try { seen = localStorage.getItem("retro-starpop") === "1"; } catch (e) {}
+    if (seen || !pop) return;
+    function dismiss() {
+      pop.classList.remove("show");
+      try { localStorage.setItem("retro-starpop", "1"); } catch (e) {}
+      setTimeout(function () { pop.hidden = true; }, 600);
+    }
+    document.getElementById("sp-x").addEventListener("click", dismiss);
+    document.getElementById("sp-star").addEventListener("click", dismiss);
+    setTimeout(function () {
+      pop.hidden = false;
+      requestAnimationFrame(function () { pop.classList.add("show"); });
+    }, 600);
+  })();
 
   // copy-to-clipboard: click copies; a permanently reserved line below the
   // command shows feedback, so the layout never shifts a single pixel.
