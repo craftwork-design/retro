@@ -58,7 +58,8 @@ FAILURE_RE = rx(
     r"не (работает|сработал\w*|запускается|запустил\w*|открывается|включается|"
     r"вызывается|копир\w+|грузится|загружа\w+|сохраня\w+|отобража\w+|показыва\w+|"
     r"подключа\w+|видно|вижу|появля\w+|обновля\w+)",
-    r"(ошибк|краш|сломал|глюч|глюк|завис|вылет|отвал)\w*",
+    r"(?<!\w)(ошибк|краш|сломал|поломал|глюч|глюк|завис(?!им|ит|ят|ел)|"
+    r"вылет(?!ающ)|отвал)\w*",
     r"\bупал[ао]?\b", r"закрыл(ся|ась|ось)",
     r"doesn'?t work", r"not working", r"is broken", r"\bcrash\w*", r"still fails?\b",
     r"error again\b", r"same (error|issue|problem)( again| still)?\b",
@@ -106,7 +107,8 @@ RULE_REQUEST_RE = rx(
 NUDGE_RE = rx(
     r"^(продолжай|продолжи|продолжаем|дальше|давай дальше|continue|go on|"
     r"proceed|keep going)[.!…\s]*$",
-    r"^(закончил|закончила|готово|ну что|done|finished|ready)\??[.!\s]*$",
+    r"^(закончил|закончила|готово|done|finished|ready)\s*\?+[.!\s]*$",
+    r"^ну что[?.!\s]*$",
 )
 
 # benign post-interrupt messages: not redirections
@@ -209,9 +211,11 @@ def parse_ts(value):
     if not value:
         return None
     try:
-        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+        ts = datetime.fromisoformat(value.replace("Z", "+00:00"))
     except (ValueError, AttributeError):
         return None
+    # naive stamps would crash the window comparison; transcripts use UTC
+    return ts if ts.tzinfo else ts.replace(tzinfo=timezone.utc)
 
 
 def excerpt(text, limit):
@@ -254,6 +258,10 @@ def clean_user_text(raw):
     return text
 
 
+# words shaped like a comparative that never ask for a redo
+NOT_COMPARATIVES = {"далее", "более", "менее", "ранее", "позднее", "иначе"}
+
+
 def hits(regexes, text):
     return sum(1 for r in regexes if r.search(text))
 
@@ -279,7 +287,8 @@ def classify_user_msg(text):
         score += 3
         reasons.append("frustration")
     # one-word comparative like "компактнее" / "короче"
-    if len(tl) <= 30 and re.fullmatch(r"(по)?[а-яё]+(ее|ей|че)[.!…]*", tl):
+    if (len(tl) <= 30 and re.fullmatch(r"(по)?[а-яё]+(ее|ей|че)[.!…]*", tl)
+            and tl.rstrip(".!…") not in NOT_COMPARATIVES):
         score += 2
         if "redo" not in reasons:
             reasons.append("redo")
@@ -326,6 +335,8 @@ def stem(w):
             if w.endswith(suf) and len(w) - len(suf) >= 3:
                 return w[: -len(suf)]
         return w
+    if not "а" <= w[0] <= "я" and w[0] != "ё":
+        return w
     for suf in _RU_SUFFIXES:
         # short suffixes fold aggressively (нашел→наш): demand longer stems
         keep = 4 if len(suf) <= 2 else 3
@@ -334,9 +345,16 @@ def stem(w):
     return w
 
 
+CJK_RE = re.compile(r"[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]+")
+
+
 def tokens_of(text):
     out = set()
-    for w in re.findall(r"[a-zа-яё0-9']+", text.lower()):
+    text = text.lower()
+    # scripts without spaces: character bigrams stand in for words
+    for run in CJK_RE.findall(text):
+        out.update(run[i:i + 2] for i in range(len(run) - 1))
+    for w in re.findall(r"[^\W_]+(?:'[^\W_]+)*", CJK_RE.sub(" ", text)):
         if len(w) < 3 or w in STOPWORDS:
             continue
         s = stem(w)
@@ -345,7 +363,10 @@ def tokens_of(text):
     return out
 
 
-def parse_session(path, max_excerpt):
+def parse_session(path, max_excerpt, cutoff=None):
+    """Parse one transcript. Events older than `cutoff` still feed context
+    (tool ids, the previous user message) but are never counted: a session
+    resumed today may carry months of older history."""
     s = {
         "id": path.stem,
         "title": None,
@@ -372,6 +393,7 @@ def parse_session(path, max_excerpt):
     prev_user_norm = None
     admission_since_user = False
     last_assistant_claim = False
+    live = True  # current event is inside the window; untimed events inherit
 
     try:
         fh = open(path, "r", encoding="utf-8", errors="replace")
@@ -399,6 +421,7 @@ def parse_session(path, max_excerpt):
 
             ts = parse_ts(obj.get("timestamp"))
             if ts:
+                live = cutoff is None or ts >= cutoff
                 s["start"] = s["start"] or ts
                 s["end"] = ts
             if not s["cwd"] and obj.get("cwd"):
@@ -420,7 +443,7 @@ def parse_session(path, max_excerpt):
                         name = b.get("name") or "?"
                         key = tool_key(name, b.get("input"))
                         tool_uses[b.get("id")] = (name, key)
-                        s["tool_calls"] += 1
+                        s["tool_calls"] += live
                         last_event = "tool_use"
                     elif b.get("type") == "text":
                         text = (b.get("text") or "").strip()
@@ -430,7 +453,7 @@ def parse_session(path, max_excerpt):
                         event_claim = bool(event_claim) or bool(
                             hits(SUCCESS_CLAIM_RE, text.lower())
                         )
-                        if not admission_since_user and prev_user_text:
+                        if live and not admission_since_user and prev_user_text:
                             tl = text.lower().lstrip()
                             if hits(ADMISSION_RE, tl) or hits(ADMISSION_ANCHORED_RE, tl):
                                 s["admissions"].append({
@@ -455,18 +478,20 @@ def parse_session(path, max_excerpt):
                         if b.get("is_error"):
                             err = result_text(b)
                             if is_denial(err):
-                                s["denials"].append({"tool": name, "key": key})
+                                if live:
+                                    s["denials"].append({"tool": name, "key": key})
                                 last_event = "denial"
                             elif is_cancel(err):
                                 last_event = "interrupt"
                             else:
-                                s["errors"] += 1
-                                g = error_groups.setdefault(
-                                    (name, key), {"count": 0, "example": ""}
-                                )
-                                g["count"] += 1
-                                if not g["example"]:
-                                    g["example"] = excerpt(err, 160)
+                                if live:
+                                    s["errors"] += 1
+                                    g = error_groups.setdefault(
+                                        (name, key), {"count": 0, "example": ""}
+                                    )
+                                    g["count"] += 1
+                                    if not g["example"]:
+                                        g["example"] = excerpt(err, 160)
                                 last_event = "error"
                         else:
                             last_event = "tool_ok"
@@ -479,7 +504,7 @@ def parse_session(path, max_excerpt):
                 if not raw.strip():
                     continue
                 if raw.lstrip().startswith("[Request interrupted"):
-                    s["interrupts"] += 1
+                    s["interrupts"] += live
                     prev_was_interrupt = True
                     last_event = "interrupt"
                     continue
@@ -490,10 +515,10 @@ def parse_session(path, max_excerpt):
                 is_first = s["first_prompt"] is None
                 if is_first:
                     s["first_prompt"] = excerpt(text, 160)
-                s["user_msgs"] += 1
+                s["user_msgs"] += live
                 tl = re.sub(r"\s+", " ", text.lower()).strip()
 
-                if len(text) <= 600 and hits(RULE_REQUEST_RE, tl):
+                if live and len(text) <= 600 and hits(RULE_REQUEST_RE, tl):
                     s["rule_requests"].append({
                         "ts": ts.isoformat() if ts else None,
                         "text": excerpt(text, max_excerpt),
@@ -501,7 +526,7 @@ def parse_session(path, max_excerpt):
 
                 nudge = bool(hits(NUDGE_RE, tl))
                 if nudge and not prev_was_interrupt and not is_first:
-                    s["nudges"] += 1
+                    s["nudges"] += live
                     last_event = "user_msg"
                     prev_user_text = text
                     # prev_user_norm intentionally NOT updated: a nudge between
@@ -525,7 +550,7 @@ def parse_session(path, max_excerpt):
                         score = max(score, 2)
                     # long pasted texts trip markers by accident; demand more
                     threshold = 2 if len(text) <= 400 else (4 if len(text) <= 1500 else 6)
-                    if reasons and (
+                    if live and reasons and (
                         score >= threshold
                         or "post_interrupt" in reasons
                         or "repeat_paste" in reasons
@@ -544,7 +569,7 @@ def parse_session(path, max_excerpt):
                 # first prompts included: session-opener repeats are exactly
                 # the recurring-task pattern we hunt for
                 toks = tokens_of(text)
-                if 3 <= len(toks) <= 60 and len(text) <= 1200 \
+                if live and 3 <= len(toks) <= 60 and len(text) <= 1200 \
                         and not text.startswith(("[", "/")):
                     s["_msgs"].append({
                         "tokens": toks,
@@ -651,8 +676,9 @@ def cluster_repeats(msgs):
     return out[:15]
 
 
-def session_files(project_dirs, days, limit):
-    cutoff = datetime.now(timezone.utc) - timedelta(days=min(days, 36500))
+def session_files(project_dirs, cutoff, limit):
+    """Newest-first session files touched since `cutoff`; also returns
+    whether `limit` cut any off."""
     per_dir = []
     for d in project_dirs:
         files = []
@@ -676,7 +702,32 @@ def session_files(project_dirs, days, limit):
             if rank < len(fs) and len(out) < limit:
                 out.append(fs[rank][1])
         rank += 1
-    return out
+    return out, sum(len(fs) for fs in per_dir) > len(out)
+
+
+def recorded_cwd(project_dir):
+    """The cwd recorded in the newest transcript of a project dir, or None."""
+    files = sorted(project_dir.glob("*.jsonl"),
+                   key=lambda f: f.stat().st_mtime, reverse=True)
+    for f in files[:3]:
+        try:
+            with open(f, "r", encoding="utf-8", errors="replace") as fh:
+                for _, line in zip(range(50), fh):
+                    if '"cwd"' not in line:
+                        continue
+                    try:
+                        cwd = json.loads(line).get("cwd")
+                    except (ValueError, AttributeError):
+                        continue
+                    if cwd:
+                        return cwd
+        except OSError:
+            continue
+    return None
+
+
+def is_inside(path, roots):
+    return any(path == r or r in path.parents for r in roots)
 
 
 def is_synthetic_dir(d):
@@ -727,7 +778,11 @@ def aggregate(sessions, days, project_label):
             retry_loops.append({**r, "session": s["id"]})
         all_msgs.extend(s.pop("_msgs"))
 
-    corrections.sort(key=lambda c: c.get("ts") or "", reverse=True)
+    # cap by strength, not recency: a burst of fresh redo-only noise must
+    # not push out older after_success_claim / frustration entries
+    corrections.sort(key=lambda c: (c["score"], c.get("ts") or ""), reverse=True)
+    corrections = sorted(corrections[:80], key=lambda c: c.get("ts") or "",
+                         reverse=True)
     admissions.sort(key=lambda a: a.get("ts") or "", reverse=True)
     rule_requests.sort(key=lambda r: r.get("ts") or "", reverse=True)
     retry_loops.sort(key=lambda r: r["count"], reverse=True)
@@ -933,27 +988,35 @@ def main():
         resolved = given.resolve()
         if resolved != given:
             candidates += [resolved, *resolved.parents]
-        d = next(
-            (projects_root / munge_path(p) for p in candidates
+        root = next(
+            (p for p in candidates
              if munge_path(p) != "-" and (projects_root / munge_path(p)).is_dir()),
             None,
         )
-        if d is None:
+        if root is None:
             sys.exit(
                 f"retro: no transcripts for {args.project} or any parent directory\n"
                 f"       (looked in {projects_root})\n"
                 f"       try --all to scan every project"
             )
+        d = projects_root / munge_path(root)
         # sibling dirs of the same repo: worktrees and subdirectory launches
-        # (e.g. <proj>--claude-worktrees-x, <proj>-packages-y)
-        dirs = [d] + [
-            x for x in projects_root.iterdir()
-            if x.is_dir() and x.name != d.name and x.name.startswith(d.name + "-")
-        ]
+        # (e.g. <proj>--claude-worktrees-x, <proj>-packages-y). The munged
+        # prefix also matches other projects (<proj>-v2), so keep a sibling
+        # only if its sessions really ran inside this project.
+        roots = {root, root.resolve()}
+        dirs = [d]
+        for x in projects_root.iterdir():
+            if x.is_dir() and x.name != d.name and x.name.startswith(d.name + "-"):
+                cwd = recorded_cwd(x)
+                if cwd and (is_inside(Path(cwd), roots)
+                            or is_inside(Path(cwd).resolve(), roots)):
+                    dirs.append(x)
         label = Path(args.project).name  # placeholder; refined from cwd below
 
-    files = session_files(dirs, args.days, args.limit)
-    sessions = [s for f in files if (s := parse_session(f, args.max_excerpt))]
+    cutoff = datetime.now(timezone.utc) - timedelta(days=min(args.days, 36500))
+    files, truncated = session_files(dirs, cutoff, args.limit)
+    sessions = [s for f in files if (s := parse_session(f, args.max_excerpt, cutoff))]
     sessions = [s for s in sessions if s["user_msgs"] > 0 or s["tool_calls"] > 0]
 
     if not args.all:
@@ -964,7 +1027,7 @@ def main():
             label = Path(cwd).name or label
 
     report = aggregate(sessions, args.days, label)
-    report["truncated"] = len(files) >= args.limit
+    report["truncated"] = truncated
 
     if args.format == "json":
         json.dump(report, sys.stdout, ensure_ascii=False, indent=1)

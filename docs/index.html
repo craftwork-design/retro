@@ -326,7 +326,7 @@ with quotes and dates attached. use both.</pre>
       .catch(function () { /* private repo / offline / rate limit → keeps "github" */ });
   })();
 
-  // star popup: shows once after ~25s, unless already starred/dismissed
+  // star popup: shows once on load, unless already starred/dismissed
   (function starPopup() {
     var pop = document.getElementById("starpop");
     var seen = false;

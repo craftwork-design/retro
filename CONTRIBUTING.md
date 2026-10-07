@@ -23,9 +23,12 @@ and prefer word stems over exact forms for inflected languages.
 
 - Stdlib only. No dependencies, ever — it's the core promise of the tool.
 - No network calls of any kind.
-- Run `python3 tests/smoke.py` before pushing; CI runs it on 3.8 and 3.12.
+- Run `python3 tests/smoke.py` and `python3 tests/detectors.py` before
+  pushing; CI runs them on 3.8 and 3.12.
 - If you add a detector class, add a line to the fixture
   (`tests/fixtures/session.jsonl`) and an assertion to `tests/smoke.py`.
+- If you fix a detection miss or a false positive, add the phrase to the
+  table in `tests/detectors.py`.
 
 ## Reporting detection misses
 

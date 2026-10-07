@@ -59,9 +59,9 @@ Sanity-check the output before proceeding:
 - If `truncated` is true OR `sessions_scanned` equals `--limit`, the window
   was capped: rerun with `--limit 1000` before doing anything else, or state
   the real coverage in the report header instead of "last N days".
-- Sessions are selected by file modification time; individual quotes carry
-  their own `ts` and may predate the window. Check the `ts` of every quote
-  you cite; present older evidence as such, never as recent.
+- Counts and quotes cover only events inside the window, by their own
+  `ts`. `sessions[].start` is the session's real start and may predate the
+  window when an old session was resumed.
 
 ## Step 2 — read the current harness
 
@@ -149,8 +149,9 @@ first):
 5. `correction` / `redo` / `repeat_paste` — real but noisier; verify quotes.
 
 Multi-reason entries outrank single-reason ones. Note: the excerpt arrays
-are capped (`corrections` 80, `admissions` 40, `sessions` 100 + all
-abandoned) — use `totals` for counts, arrays for quotes. Ignore
+are capped (`corrections` 80 highest-score entries, listed newest-first;
+`admissions` 40; `sessions` 100 + all abandoned) — use `totals` for counts,
+arrays for quotes. Ignore
 `top_correction_terms` unless it shows an obvious theme.
 
 If you need more context on a session, its transcript is at

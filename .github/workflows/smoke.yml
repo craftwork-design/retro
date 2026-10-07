@@ -22,4 +22,5 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - run: python tests/smoke.py
+      - run: python tests/detectors.py
       - run: python tests/art_check.py
